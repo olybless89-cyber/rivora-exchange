@@ -27,7 +27,6 @@ export default function InvestPage() {
       toast({ title: "Invalid amount", description: `Minimum for ${selectedPlan.name} is ${formatNaira(selectedPlan.minAmount)}`, variant: "destructive" });
       return;
     }
-
     createInvestment.mutate(
       { data: { planId: selectedPlan.id, amount: numAmount } },
       {
@@ -50,21 +49,17 @@ export default function InvestPage() {
       <div style={{ padding: "24px 20px" }}>
         <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 4px" }}>Investment Plans</h1>
         <p style={{ color: "#9C9C9C", fontSize: 13, margin: "0 0 20px" }}>Balance: {formatNaira(user?.balance ?? 0)}</p>
-
         {isLoading && <p style={{ color: "#9C9C9C" }}>Loading plans…</p>}
-
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {(plans ?? []).map((plan) => {
             const dailyIncome = (Number(plan.minAmount) * Number(plan.dailyRate)) / 100;
             const totalIncome = dailyIncome * plan.durationDays;
             return (
               <Card key={plan.id} style={{ padding: 18 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "#D4AF37", fontStyle: "italic" }}>{plan.name}</p>
-                    <p style={{ fontSize: 13, color: "#e8eaec", margin: "6px 0 0" }}>
-                      Deposit: <span style={{ color: "#e8eaec", fontWeight: 600 }}>{formatNaira(plan.minAmount)}</span>
-                    </p>
+                    <p style={{ fontSize: 13, color: "#e8eaec", margin: "6px 0 0" }}>Deposit: <span style={{ fontWeight: 600 }}>{formatNaira(plan.minAmount)}</span></p>
                     <p style={{ fontSize: 13, color: "#9C9C9C", margin: "2px 0 0" }}>Duration: {plan.durationDays} days</p>
                     <div style={{ display: "flex", gap: 20, marginTop: 10 }}>
                       <div>
@@ -78,7 +73,7 @@ export default function InvestPage() {
                     </div>
                   </div>
                   <Button
-                    style={{ marginLeft: 12, alignSelf: "center", background: "#22c55e", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, padding: "10px 20px" }}
+                    style={{ marginLeft: 12, background: "#22c55e", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, padding: "10px 20px" }}
                     onClick={() => { setSelectedPlan(plan); setAmount(String(plan.minAmount)); }}
                   >
                     Invest
@@ -95,17 +90,10 @@ export default function InvestPage() {
 
       <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invest in {selectedPlan?.name}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Invest in {selectedPlan?.name}</DialogTitle></DialogHeader>
           <div style={{ marginBottom: 8 }}>
             <label style={{ fontSize: 12, color: "#9C9C9C", textTransform: "uppercase", letterSpacing: "0.05em" }}>Amount (₦)</label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="mt-2"
-            />
+            <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-2" />
             {selectedPlan && (
               <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 8 }}>
                 Minimum: {formatNaira(selectedPlan.minAmount)} · Daily return: {Number(selectedPlan.dailyRate)}% · {selectedPlan.durationDays} days

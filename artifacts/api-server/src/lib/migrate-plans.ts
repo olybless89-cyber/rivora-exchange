@@ -1,13 +1,3 @@
-/**
- * migrate-plans.ts
- *
- * One-shot migration: wipe ALL existing investment plans and re-insert
- * the canonical VIP 3–8 tiers. Safe to re-run — fully idempotent.
- *
- * Usage (from repo root):
- *   pnpm --filter @workspace/api-server run migrate:plans
- */
-
 import { db, investmentPlansTable } from "@workspace/db";
 import crypto from "node:crypto";
 
@@ -22,15 +12,8 @@ const VIP_PLANS = [
 
 async function migratePlans(): Promise<void> {
   console.log("=== Rivora investment-plan migration ===\n");
-
-  // Force-delete ALL existing plans regardless of count
   const deleted = await db.delete(investmentPlansTable).returning();
-  console.log(`Deleted ${deleted.length} existing plan(s):`);
-  for (const p of deleted) {
-    console.log(`  ✗ ${p.name}  (min ₦${Number(p.minAmount).toLocaleString()} · ${p.dailyRate}%/day · ${p.durationDays}d)`);
-  }
-
-  console.log("\nInserting VIP 3–8 plans:");
+  console.log(`Deleted ${deleted.length} existing plan(s)`);
   for (const plan of VIP_PLANS) {
     const dailyIncome = (plan.minAmount * plan.dailyRate) / 100;
     const totalIncome = dailyIncome * plan.durationDays;
@@ -42,15 +25,9 @@ async function migratePlans(): Promise<void> {
       durationDays: plan.durationDays,
       isActive: true,
     });
-    console.log(
-      `  ✓ ${plan.name}  deposit ₦${plan.minAmount.toLocaleString()}` +
-      `  →  ₦${dailyIncome.toLocaleString()}/day  ·  ₦${totalIncome.toLocaleString()} total`,
-    );
+    console.log(`  ✓ ${plan.name}  ₦${plan.minAmount.toLocaleString()} → ₦${dailyIncome.toLocaleString()}/day · ₦${totalIncome.toLocaleString()} total`);
   }
-
   console.log("\nMigration complete ✅");
 }
 
-migratePlans()
-  .then(() => process.exit(0))
-  .catch((err) => { console.error("Migration failed:", err); process.exit(1); });
+migratePlans().then(() => process.exit(0)).catch((err) => { console.error(err); process.exit(1); });
