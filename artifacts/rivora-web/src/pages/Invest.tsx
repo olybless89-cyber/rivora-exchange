@@ -16,7 +16,6 @@ export default function InvestPage() {
   const createInvestment = useCreateInvestment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [amount, setAmount] = useState("");
 

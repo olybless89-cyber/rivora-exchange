@@ -10,19 +10,14 @@ export const PLAN_SEED_DATA = [
   { name: "VIP 8", minAmount: 640_000, dailyRate: 26.5625, durationDays: 100 },
 ];
 
-// Seeds VIP 3-8 if DB is empty OR still has old RIVO-LV plans.
-// Render redeploy auto-migrates — no shell access needed.
 export async function seedInvestmentPlansIfEmpty(): Promise<void> {
   const existing = await db.select().from(investmentPlansTable).limit(1);
   const hasOldPlans = existing.length > 0 && existing[0].name.startsWith("RIVO-LV");
-
   if (existing.length > 0 && !hasOldPlans) return;
-
   if (hasOldPlans) {
     await db.delete(investmentPlansTable);
     console.log("Auto-migration: removed old RIVO-LV plans, inserting VIP 3-8");
   }
-
   for (const plan of PLAN_SEED_DATA) {
     await db.insert(investmentPlansTable).values({
       id: crypto.randomUUID(),

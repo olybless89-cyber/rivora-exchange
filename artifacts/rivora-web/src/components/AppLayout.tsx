@@ -1,15 +1,15 @@
 import { type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useGetMe } from "@workspace/api-client-react";
-import { Home, TrendingUp, ArrowDownToLine, ArrowUpFromLine, User } from "lucide-react";
+import { Home, TrendingUp, Briefcase, ArrowDownToLine, User } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { WelcomeModal } from "@/components/WelcomeModal";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/invest", label: "Invest", icon: TrendingUp },
+  { href: "/my-investments", label: "Orders", icon: Briefcase },
   { href: "/deposit", label: "Deposit", icon: ArrowDownToLine },
-  { href: "/withdraw", label: "Withdraw", icon: ArrowUpFromLine },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
