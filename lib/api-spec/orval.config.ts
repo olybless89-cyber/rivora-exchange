@@ -25,6 +25,14 @@ export default defineConfig({
         query: {
           useQuery: true,
         },
+        fetch: {
+          // orval's built-in fetch client (which this type generation
+          // defaults to modeling) resolves to { status, data, headers }.
+          // Our custom mutator resolves to the bare parsed body instead
+          // (see custom-fetch.ts's Promise<T> return), so every generated
+          // response type needs to match THAT shape, not the built-in one.
+          includeHttpResponseReturnType: false,
+        },
       },
     },
   },
