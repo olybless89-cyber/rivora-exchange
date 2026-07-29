@@ -1,0 +1,715 @@
+openapi: 3.0.3
+info:
+  title: Rivora Exchange API
+  version: 1.0.0
+servers:
+  - url: /api
+
+paths:
+  # ---------------------------------------------------------------------
+  # Auth
+  # ---------------------------------------------------------------------
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      responses:
+        '204':
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------
+  # Users
+  # ---------------------------------------------------------------------
+  /users/me/bank:
+    patch:
+      operationId: updateMyBankDetails
+      tags: [users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankDetails'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/UserStatus' }
+        - name: role
+          in: query
+          schema: { $ref: '#/components/schemas/UserRole' }
+      responses:
+        '200':
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updateUser
+      tags: [users]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------
+  # Investment plans
+  # ---------------------------------------------------------------------
+  /investment-plans:
+    get:
+      operationId: listInvestmentPlans
+      tags: [investment-plans]
+      parameters:
+        - name: activeOnly
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvestmentPlan'
+    post:
+      operationId: createInvestmentPlan
+      tags: [investment-plans]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvestmentPlanRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPlan'
+
+  /investment-plans/{planId}:
+    patch:
+      operationId: updateInvestmentPlan
+      tags: [investment-plans]
+      parameters:
+        - name: planId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInvestmentPlanRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentPlan'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteInvestmentPlan
+      tags: [investment-plans]
+      parameters:
+        - name: planId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------
+  # Investments (user placing money into a plan)
+  # ---------------------------------------------------------------------
+  /investments:
+    get:
+      operationId: listInvestments
+      tags: [investments]
+      parameters:
+        - name: userId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Investments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserInvestment'
+    post:
+      operationId: createInvestment
+      tags: [investments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvestmentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInvestment'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------
+  # Deposit requests
+  # ---------------------------------------------------------------------
+  /deposit-requests:
+    get:
+      operationId: listDepositRequests
+      tags: [deposit-requests]
+      parameters:
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/RequestStatus' }
+      responses:
+        '200':
+          description: Deposit requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepositRequest'
+    post:
+      operationId: createDepositRequest
+      tags: [deposit-requests]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepositRequestBody'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositRequest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /deposit-requests/{requestId}:
+    patch:
+      operationId: updateDepositRequest
+      tags: [deposit-requests]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequestStatusBody'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositRequest'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------
+  # Withdrawal requests
+  # ---------------------------------------------------------------------
+  /withdrawal-requests:
+    get:
+      operationId: listWithdrawalRequests
+      tags: [withdrawal-requests]
+      parameters:
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/RequestStatus' }
+      responses:
+        '200':
+          description: Withdrawal requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WithdrawalRequest'
+    post:
+      operationId: createWithdrawalRequest
+      tags: [withdrawal-requests]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWithdrawalRequestBody'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithdrawalRequest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /withdrawal-requests/{requestId}:
+    patch:
+      operationId: updateWithdrawalRequest
+      tags: [withdrawal-requests]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequestStatusBody'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithdrawalRequest'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ---------------------------------------------------------------------
+  # Transactions
+  # ---------------------------------------------------------------------
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      parameters:
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { $ref: '#/components/schemas/TransactionType' }
+      responses:
+        '200':
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+components:
+  schemas:
+    UserRole:
+      type: string
+      enum: [user, admin]
+    UserStatus:
+      type: string
+      enum: [active, inactive]
+    TransactionType:
+      type: string
+      enum: [deposit, withdrawal, investment, bonus]
+    TransactionStatus:
+      type: string
+      enum: [pending, completed, rejected]
+    RequestStatus:
+      type: string
+      enum: [pending, approved, rejected]
+    InvestmentStatus:
+      type: string
+      enum: [active, completed]
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+
+    BankDetails:
+      type: object
+      properties:
+        bankName: { type: string }
+        bankAccountNumber: { type: string }
+        bankAccountName: { type: string }
+
+    User:
+      type: object
+      required: [id, phone, fullName, role, status, balance, referralCode, hasReceivedWelcomeBonus, mustChangePassword, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        phone: { type: string }
+        fullName: { type: string }
+        role: { $ref: '#/components/schemas/UserRole' }
+        status: { $ref: '#/components/schemas/UserStatus' }
+        balance: { type: number }
+        referralCode: { type: string }
+        referredBy: { type: string, nullable: true }
+        hasReceivedWelcomeBonus: { type: boolean }
+        bankName: { type: string, nullable: true }
+        bankAccountNumber: { type: string, nullable: true }
+        bankAccountName: { type: string, nullable: true }
+        mustChangePassword: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        role: { $ref: '#/components/schemas/UserRole' }
+        status: { $ref: '#/components/schemas/UserStatus' }
+        balance: { type: number }
+        newPassword: { type: string, minLength: 6 }
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        token: { type: string }
+
+    RegisterRequest:
+      type: object
+      required: [phone, password, confirmPassword, fullName]
+      properties:
+        phone: { type: string, minLength: 10 }
+        password: { type: string, minLength: 6 }
+        confirmPassword: { type: string, minLength: 6 }
+        fullName: { type: string, minLength: 1 }
+        referralCode: { type: string, nullable: true }
+
+    LoginRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone: { type: string }
+        password: { type: string }
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 6 }
+
+    InvestmentPlan:
+      type: object
+      required: [id, name, dailyRate, minAmount, durationDays, isActive, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        dailyRate: { type: number }
+        minAmount: { type: number }
+        durationDays: { type: integer }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateInvestmentPlanRequest:
+      type: object
+      required: [name, dailyRate, minAmount, durationDays]
+      properties:
+        name: { type: string }
+        dailyRate: { type: number }
+        minAmount: { type: number }
+        durationDays: { type: integer }
+        isActive: { type: boolean }
+
+    UpdateInvestmentPlanRequest:
+      type: object
+      properties:
+        name: { type: string }
+        dailyRate: { type: number }
+        minAmount: { type: number }
+        durationDays: { type: integer }
+        isActive: { type: boolean }
+
+    UserInvestment:
+      type: object
+      required: [id, userId, planId, planName, amount, dailyRate, startDate, endDate, status, createdAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        planId: { type: string }
+        planName: { type: string }
+        amount: { type: number }
+        dailyRate: { type: number }
+        startDate: { type: string, format: date-time }
+        endDate: { type: string, format: date-time }
+        status: { $ref: '#/components/schemas/InvestmentStatus' }
+        createdAt: { type: string, format: date-time }
+
+    CreateInvestmentRequest:
+      type: object
+      required: [planId, amount]
+      properties:
+        planId: { type: string }
+        amount: { type: number }
+
+    Transaction:
+      type: object
+      required: [id, userId, type, amount, status, reference, createdAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        type: { $ref: '#/components/schemas/TransactionType' }
+        amount: { type: number }
+        status: { $ref: '#/components/schemas/TransactionStatus' }
+        reference: { type: string }
+        description: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    DepositRequest:
+      type: object
+      required: [id, userId, amount, paymentMethod, status, createdAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        amount: { type: number }
+        paymentMethod: { type: string }
+        proofUrl: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/RequestStatus' }
+        createdAt: { type: string, format: date-time }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+
+    CreateDepositRequestBody:
+      type: object
+      required: [amount, paymentMethod]
+      properties:
+        amount: { type: number }
+        paymentMethod: { type: string }
+        proofUrl: { type: string, nullable: true }
+
+    WithdrawalRequest:
+      type: object
+      required: [id, userId, amount, fee, netAmount, bankName, bankAccountNumber, bankAccountName, status, createdAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        amount: { type: number }
+        fee: { type: number }
+        netAmount: { type: number }
+        bankName: { type: string }
+        bankAccountNumber: { type: string }
+        bankAccountName: { type: string }
+        status: { $ref: '#/components/schemas/RequestStatus' }
+        createdAt: { type: string, format: date-time }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+
+    CreateWithdrawalRequestBody:
+      type: object
+      required: [amount, bankName, bankAccountNumber, bankAccountName]
+      properties:
+        amount: { type: number }
+        bankName: { type: string }
+        bankAccountNumber: { type: string }
+        bankAccountName: { type: string }
+
+    UpdateRequestStatusBody:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/RequestStatus' }

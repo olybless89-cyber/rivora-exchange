@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+*.bak
+*.bak[0-9]*
+tsconfig.tsbuildinfo
+.vercel
