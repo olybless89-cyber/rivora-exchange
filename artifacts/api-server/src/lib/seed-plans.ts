@@ -1,23 +1,26 @@
 import crypto from "node:crypto";
 import { db, investmentPlansTable } from "@workspace/db";
 
+// RIVO-LV1–LV10  |  5% daily  |  90-day duration
 export const PLAN_SEED_DATA = [
-  { name: "VIP 3", minAmount: 20_000,  dailyRate: 27.5,    durationDays: 100 },
-  { name: "VIP 4", minAmount: 40_000,  dailyRate: 26.25,   durationDays: 100 },
-  { name: "VIP 5", minAmount: 80_000,  dailyRate: 25.25,   durationDays: 100 },
-  { name: "VIP 6", minAmount: 160_000, dailyRate: 25.3125, durationDays: 100 },
-  { name: "VIP 7", minAmount: 320_000, dailyRate: 29.6875, durationDays: 100 },
-  { name: "VIP 8", minAmount: 640_000, dailyRate: 26.5625, durationDays: 100 },
+  { name: "RIVO-LV1",  minAmount:  20_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV2",  minAmount:  50_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV3",  minAmount:  80_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV4",  minAmount: 120_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV5",  minAmount: 150_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV6",  minAmount: 180_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV7",  minAmount: 220_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV8",  minAmount: 250_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV9",  minAmount: 500_000, dailyRate: 5, durationDays: 90 },
+  { name: "RIVO-LV10", minAmount: 890_000, dailyRate: 5, durationDays: 90 },
 ];
 
 export async function seedInvestmentPlansIfEmpty(): Promise<void> {
   const existing = await db.select().from(investmentPlansTable).limit(1);
-  const hasOldPlans = existing.length > 0 && existing[0].name.startsWith("RIVO-LV");
-  if (existing.length > 0 && !hasOldPlans) return;
-  if (hasOldPlans) {
-    await db.delete(investmentPlansTable);
-    console.log("Auto-migration: removed old RIVO-LV plans, inserting VIP 3-8");
-  }
+  const needsMigration = existing.length === 0 || !existing[0].name.startsWith("RIVO-LV");
+  if (!needsMigration) return;
+  await db.delete(investmentPlansTable);
+  console.log("Auto-migration: replacing plans with RIVO-LV1–LV10");
   for (const plan of PLAN_SEED_DATA) {
     await db.insert(investmentPlansTable).values({
       id: crypto.randomUUID(),
@@ -28,5 +31,5 @@ export async function seedInvestmentPlansIfEmpty(): Promise<void> {
       isActive: true,
     });
   }
-  console.log("Investment plans seeded: VIP 3-8 ✅");
+  console.log("Investment plans seeded: RIVO-LV1–LV10 ✅");
 }
