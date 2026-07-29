@@ -1,3 +1,6 @@
 packages:
   - "artifacts/*"
   - "lib/*"
+allowBuilds:
+  '@scarf/scarf': true
+  esbuild: true
