@@ -2,14 +2,14 @@ import { Router, type IRouter } from "express";
 import { and, eq, ilike, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
-import { UpdateUserRequest, BankDetails } from "@workspace/api-zod";
+import { updateUserBody, updateMyBankDetailsBody } from "@workspace/api-zod";
 import { toPublicUser } from "../lib/serializers.js";
 import { requireAuth, requireAdmin } from "../lib/auth-middleware.js";
 
 const router: IRouter = Router();
 
 router.patch("/users/me/bank", requireAuth, async (req, res): Promise<void> => {
-  const parsed = BankDetails.safeParse(req.body);
+  const parsed = updateMyBankDetailsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
@@ -63,7 +63,7 @@ router.get("/users/:userId", requireAuth, requireAdmin, async (req, res): Promis
 router.patch("/users/:userId", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const userId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
 
-  const parsed = UpdateUserRequest.safeParse(req.body);
+  const parsed = updateUserBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;

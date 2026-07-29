@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import crypto from "node:crypto";
 import { db, usersTable, depositRequestsTable, transactionsTable } from "@workspace/db";
-import { CreateDepositRequestBody, UpdateRequestStatusBody } from "@workspace/api-zod";
+import { createDepositRequestBody, updateDepositRequestBody } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../lib/auth-middleware.js";
 import { generateReference } from "../lib/reference.js";
 
@@ -28,7 +28,7 @@ router.get("/deposit-requests", requireAuth, async (req, res): Promise<void> => 
 });
 
 router.post("/deposit-requests", requireAuth, async (req, res): Promise<void> => {
-  const parsed = CreateDepositRequestBody.safeParse(req.body);
+  const parsed = createDepositRequestBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
@@ -57,7 +57,7 @@ router.post("/deposit-requests", requireAuth, async (req, res): Promise<void> =>
 router.patch("/deposit-requests/:requestId", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const requestId = Array.isArray(req.params.requestId) ? req.params.requestId[0] : req.params.requestId;
 
-  const parsed = UpdateRequestStatusBody.safeParse(req.body);
+  const parsed = updateDepositRequestBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;

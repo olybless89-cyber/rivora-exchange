@@ -1,6 +1,9 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
-import pinoHttp from "pino-http";
+// pino-http >= v8 exports its factory as a NAMED export (not default) --
+// `import pinoHttp from "pino-http"` type-resolves to the whole module
+// namespace under NodeNext moduleResolution, which isn't callable.
+import { pinoHttp } from "pino-http";
 import router from "./routes/index.js";
 import { logger } from "./lib/logger.js";
 
@@ -10,10 +13,10 @@ app.use(
   pinoHttp({
     logger,
     serializers: {
-      req(req) {
+      req(req: any) {
         return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
       },
-      res(res) {
+      res(res: any) {
         return { statusCode: res.statusCode };
       },
     },

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { db, usersTable } from "@workspace/db";
-import { RegisterRequest, LoginRequest, ChangePasswordRequest } from "@workspace/api-zod";
+import { registerBody, loginBody, changePasswordBody } from "@workspace/api-zod";
 import { signToken } from "../lib/jwt.js";
 import { generateReferralCode } from "../lib/reference.js";
 import { toPublicUser } from "../lib/serializers.js";
@@ -21,7 +21,7 @@ function normalizePhone(phone: string): string {
 }
 
 router.post("/auth/register", async (req, res): Promise<void> => {
-  const parsed = RegisterRequest.safeParse(req.body);
+  const parsed = registerBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
@@ -88,7 +88,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/login", async (req, res): Promise<void> => {
-  const parsed = LoginRequest.safeParse(req.body);
+  const parsed = loginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
@@ -128,7 +128,7 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/auth/change-password", requireAuth, async (req, res): Promise<void> => {
-  const parsed = ChangePasswordRequest.safeParse(req.body);
+  const parsed = changePasswordBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;

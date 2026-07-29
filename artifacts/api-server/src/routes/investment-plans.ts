@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import crypto from "node:crypto";
 import { db, investmentPlansTable } from "@workspace/db";
-import { CreateInvestmentPlanRequest, UpdateInvestmentPlanRequest } from "@workspace/api-zod";
+import { createInvestmentPlanBody, updateInvestmentPlanBody } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../lib/auth-middleware.js";
 
 const router: IRouter = Router();
@@ -20,7 +20,7 @@ router.get("/investment-plans", requireAuth, async (req, res): Promise<void> => 
 });
 
 router.post("/investment-plans", requireAuth, requireAdmin, async (req, res): Promise<void> => {
-  const parsed = CreateInvestmentPlanRequest.safeParse(req.body);
+  const parsed = createInvestmentPlanBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
@@ -44,7 +44,7 @@ router.post("/investment-plans", requireAuth, requireAdmin, async (req, res): Pr
 router.patch("/investment-plans/:planId", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const planId = Array.isArray(req.params.planId) ? req.params.planId[0] : req.params.planId;
 
-  const parsed = UpdateInvestmentPlanRequest.safeParse(req.body);
+  const parsed = updateInvestmentPlanBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;

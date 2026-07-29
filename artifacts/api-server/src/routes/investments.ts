@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import crypto from "node:crypto";
 import { db, usersTable, investmentPlansTable, userInvestmentsTable, transactionsTable } from "@workspace/db";
-import { CreateInvestmentRequest } from "@workspace/api-zod";
+import { createInvestmentBody } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth-middleware.js";
 import { generateReference } from "../lib/reference.js";
 
@@ -25,7 +25,7 @@ router.get("/investments", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/investments", requireAuth, async (req, res): Promise<void> => {
-  const parsed = CreateInvestmentRequest.safeParse(req.body);
+  const parsed = createInvestmentBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;

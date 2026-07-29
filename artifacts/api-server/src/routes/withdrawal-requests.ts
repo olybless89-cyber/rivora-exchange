@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import crypto from "node:crypto";
 import { db, usersTable, withdrawalRequestsTable, transactionsTable } from "@workspace/db";
-import { CreateWithdrawalRequestBody, UpdateRequestStatusBody } from "@workspace/api-zod";
+import { createWithdrawalRequestBody, updateWithdrawalRequestBody } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../lib/auth-middleware.js";
 import { generateReference } from "../lib/reference.js";
 import { isWithinWithdrawalWindow } from "../lib/withdrawal-window.js";
@@ -29,7 +29,7 @@ router.get("/withdrawal-requests", requireAuth, async (req, res): Promise<void> 
 });
 
 router.post("/withdrawal-requests", requireAuth, async (req, res): Promise<void> => {
-  const parsed = CreateWithdrawalRequestBody.safeParse(req.body);
+  const parsed = createWithdrawalRequestBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
@@ -78,7 +78,7 @@ router.post("/withdrawal-requests", requireAuth, async (req, res): Promise<void>
 router.patch("/withdrawal-requests/:requestId", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const requestId = Array.isArray(req.params.requestId) ? req.params.requestId[0] : req.params.requestId;
 
-  const parsed = UpdateRequestStatusBody.safeParse(req.body);
+  const parsed = updateWithdrawalRequestBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
     return;
