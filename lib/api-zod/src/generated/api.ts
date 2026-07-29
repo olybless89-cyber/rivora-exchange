@@ -385,13 +385,13 @@ export const updateWithdrawalRequestResponse = zod.object({
 
 export const listTransactionsQueryParams = zod.object({
   "userId": zod.string().optional(),
-  "type": zod.enum(['deposit', 'withdrawal', 'investment', 'bonus']).optional()
+  "type": zod.enum(['deposit', 'withdrawal', 'investment', 'bonus', 'referral_bonus']).optional()
 })
 
 export const listTransactionsResponseItem = zod.object({
   "id": zod.string(),
   "userId": zod.string(),
-  "type": zod.enum(['deposit', 'withdrawal', 'investment', 'bonus']),
+  "type": zod.enum(['deposit', 'withdrawal', 'investment', 'bonus', 'referral_bonus']),
   "amount": zod.number(),
   "status": zod.enum(['pending', 'completed', 'rejected']),
   "reference": zod.string(),

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>VEEKA-NGN — Investment Dashboard (Training Simulation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E17; --surface:#121A2B; --surface2:#1A2338; --raise:#212C46;
+    --gold:#E7B54B; --gold-soft:#F4D488; --gold-dim:#5C4A22;
+    --green:#2FBE7E; --green-dim:#123324;
+    --red:#E5555C;
+    --text:#F2EFE6; --text-dim:#8D96AC; --text-faint:#5A6377;
+    --line:#232C42; --line-soft:#1A2236;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#05070C;}
+  body{
+    font-family:'Inter',sans-serif; color:var(--text);
+    display:flex; justify-content:center;
+    min-height:100vh;
+  }
+  .shell{
+    width:100%; max-width:430px; min-height:100vh;
+    background:var(--bg);
+    position:relative; display:flex; flex-direction:column;
+    box-shadow:0 0 60px rgba(0,0,0,0.6);
+    background-image:
+      radial-gradient(ellipse 500px 260px at 50% -60px, rgba(231,181,75,0.14), transparent 60%);
+  }
+  .font-display{font-family:'Sora',sans-serif;}
+  .font-mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- sim tag ---------- */
+  .simtag{
+    position:sticky; top:0; z-index:50;
+    background:#000; color:var(--gold-soft);
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.08em;
+    text-align:center; padding:5px 6px; border-bottom:1px solid var(--gold-dim);
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    padding:18px 20px 14px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .v{
+    width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(155deg, var(--gold-soft), var(--gold) 55%, #a97c1f);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora',sans-serif;font-weight:800;color:#1a1305;font-size:18px;
+    box-shadow:0 4px 14px -4px rgba(231,181,75,0.55);
+  }
+  .brand .name{font-family:'Sora',sans-serif;font-weight:700;font-size:14.5px;letter-spacing:.01em;}
+  .brand .sub{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--gold); letter-spacing:.14em; margin-top:1px;}
+  .bell{
+    width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--text-dim);
+  }
+
+  /* ---------- balance strip ---------- */
+  .balance-card{
+    margin:2px 20px 18px; padding:18px 20px; border-radius:18px;
+    background:linear-gradient(135deg, var(--surface2), var(--surface) 70%);
+    border:1px solid var(--line);
+    position:relative; overflow:hidden;
+  }
+  .balance-card::after{
+    content:''; position:absolute; right:-30px; top:-30px; width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle, rgba(231,181,75,0.15), transparent 70%);
+  }
+  .balance-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);letter-spacing:.1em;}
+  .balance-amt{font-family:'Sora',sans-serif;font-weight:800;font-size:28px;margin-top:6px;letter-spacing:-.01em;}
+  .balance-amt .ngn{color:var(--gold); font-size:18px; margin-right:2px;}
+  .balance-row{display:flex; gap:10px; margin-top:14px;}
+  .bal-btn{
+    flex:1; text-align:center; padding:9px 0; border-radius:10px; font-size:13px; font-weight:600;
+    border:1px solid var(--line);
+  }
+  .bal-btn.deposit{background:var(--gold); color:#1a1305; border-color:var(--gold);}
+  .bal-btn.withdraw{background:transparent; color:var(--text);}
+
+  /* ---------- tabs content ---------- */
+  .page{padding:0 20px 100px; display:none;}
+  .page.active{display:block;}
+
+  .section-title{font-family:'Sora',sans-serif; font-weight:700; font-size:16px; margin:4px 0 4px;}
+  .section-sub{color:var(--text-dim); font-size:12.5px; margin-bottom:14px;}
+
+  /* ---------- VIP card (signature element) ---------- */
+  .vip-card{
+    border-radius:18px; border:1px solid var(--line);
+    background:var(--surface); padding:16px 16px 14px; margin-bottom:14px;
+    position:relative; overflow:hidden;
+  }
+  .vip-card.top{border-color:var(--gold-dim); box-shadow:0 0 0 1px rgba(231,181,75,0.12) inset;}
+  .vip-top{display:flex; align-items:center; gap:12px;}
+  .vip-badge{
+    width:46px;height:46px;border-radius:13px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora',sans-serif;font-weight:800;font-size:14px;color:#1a1305;
+    background:conic-gradient(var(--gold-soft) calc(var(--pct)*1%), var(--surface2) 0);
+    position:relative;
+  }
+  .vip-badge::before{
+    content:'';position:absolute;inset:4px;border-radius:9px;background:var(--surface);
+  }
+  .vip-badge span{position:relative; color:var(--gold-soft); font-size:12.5px;}
+  .vip-name{font-family:'Sora',sans-serif;font-weight:700;font-size:15.5px;}
+  .vip-roi{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--green); margin-top:2px;}
+  .vip-stats{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px;
+    padding-top:14px; border-top:1px solid var(--line-soft);
+  }
+  .vs-label{font-size:9.5px; color:var(--text-faint); font-family:'IBM Plex Mono',monospace; letter-spacing:.04em;}
+  .vs-val{font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; margin-top:3px;}
+  .vip-footer{display:flex; align-items:center; justify-content:space-between; margin-top:14px;}
+  .vip-total{}
+  .vip-total .lbl{font-size:9.5px; color:var(--text-faint); font-family:'IBM Plex Mono',monospace;}
+  .vip-total .amt{font-family:'Sora',sans-serif; font-weight:800; font-size:16px; color:var(--gold-soft);}
+  .vip-total .amt .tick{transition:opacity .25s;}
+  .invest-btn{
+    background:var(--green); color:#06251a; font-weight:700; font-size:13.5px;
+    border:none; padding:10px 20px; border-radius:11px; cursor:pointer;
+    box-shadow:0 4px 14px -4px rgba(47,190,126,0.5);
+  }
+  .invest-btn:active{transform:scale(0.97);}
+
+  /* ---------- Order page ---------- */
+  .order-item{
+    border:1px solid var(--line); background:var(--surface); border-radius:14px;
+    padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:12px;
+  }
+  .order-icon{
+    width:38px;height:38px;border-radius:10px;background:var(--surface2);
+    display:flex;align-items:center;justify-content:center; color:var(--gold); font-family:'Sora',sans-serif; font-weight:700; font-size:12px;
+  }
+  .order-mid{flex:1;}
+  .order-name{font-weight:600; font-size:14px;}
+  .order-date{font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'IBM Plex Mono',monospace;}
+  .order-right{text-align:right;}
+  .order-amt{font-family:'Sora',sans-serif; font-weight:700; font-size:14px;}
+  .status-pill{
+    font-size:9.5px; padding:3px 8px; border-radius:20px; margin-top:4px; display:inline-block;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.04em;
+  }
+  .status-active{background:var(--green-dim); color:var(--green);}
+  .status-completed{background:var(--surface2); color:var(--text-dim);}
+  .empty-state{text-align:center; padding:50px 20px; color:var(--text-dim);}
+  .empty-state .ic{font-size:34px; margin-bottom:10px;}
+
+  /* ---------- Invite page ---------- */
+  .invite-hero{
+    border-radius:18px; padding:22px 20px; text-align:center;
+    background:linear-gradient(160deg, var(--surface2), var(--surface));
+    border:1px solid var(--gold-dim); margin-bottom:18px;
+  }
+  .invite-hero .big{font-family:'Sora',sans-serif; font-weight:800; font-size:22px; color:var(--gold-soft);}
+  .invite-hero .small{font-size:12px; color:var(--text-dim); margin-top:6px;}
+  .code-row{
+    margin-top:16px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px dashed var(--gold-dim); border-radius:12px; padding:10px 14px;
+  }
+  .code-row .code{font-family:'IBM Plex Mono',monospace; font-weight:600; letter-spacing:.12em; flex:1; text-align:left; color:var(--gold-soft);}
+  .copy-btn{background:var(--gold); color:#1a1305; border:none; font-size:11.5px; font-weight:700; padding:7px 12px; border-radius:8px;}
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;}
+  .stat-box{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px;}
+  .stat-box .n{font-family:'Sora',sans-serif; font-weight:800; font-size:19px;}
+  .stat-box .l{font-size:10.5px; color:var(--text-dim); margin-top:3px;}
+  .ref-row{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line-soft);}
+  .ref-avatar{width:32px;height:32px;border-radius:50%; background:var(--surface2); display:flex;align-items:center;justify-content:center; font-size:12px; font-weight:700; color:var(--text-dim);}
+  .ref-name{font-size:13px; font-weight:600;}
+  .ref-date{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Mine page ---------- */
+  .profile-head{display:flex; align-items:center; gap:14px; padding:6px 0 20px;}
+  .avatar{width:58px;height:58px;border-radius:50%; background:linear-gradient(155deg,var(--gold-soft),var(--gold)); display:flex;align-items:center;justify-content:center; font-family:'Sora',sans-serif; font-weight:800; color:#1a1305; font-size:20px;}
+  .p-name{font-family:'Sora',sans-serif; font-weight:700; font-size:16.5px;}
+  .p-id{font-size:11.5px; color:var(--text-dim); font-family:'IBM Plex Mono',monospace; margin-top:2px;}
+  .menu-list{border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--surface);}
+  .menu-item{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line-soft); font-size:14px;}
+  .menu-item:last-child{border-bottom:none;}
+  .menu-item .mi{width:30px;height:30px;border-radius:9px;background:var(--surface2); display:flex;align-items:center;justify-content:center; font-size:14px;}
+  .menu-item .arrow{margin-left:auto; color:var(--text-faint);}
+
+  /* ---------- bottom nav ---------- */
+  .bottomnav{
+    position:sticky; bottom:0; left:0; right:0; z-index:40;
+    background:rgba(10,14,23,0.92); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line); display:flex; padding:8px 6px 12px;
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:6px 0; color:var(--text-faint); font-size:10.5px; font-weight:600; cursor:pointer;
+  }
+  .nav-btn .ic{font-size:19px; line-height:1;}
+  .nav-btn.active{color:var(--gold-soft);}
+
+  /* ---------- toast / modal ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px);
+    background:#000; color:var(--text); border:1px solid var(--gold-dim);
+    padding:11px 18px; border-radius:12px; font-size:13px; opacity:0; pointer-events:none;
+    transition:.25s; z-index:80; max-width:340px; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px);
+    display:flex; align-items:flex-end; justify-content:center; z-index:90; opacity:0; pointer-events:none; transition:.2s;
+  }
+  .modal-bg.show{opacity:1; pointer-events:auto;}
+  .modal{
+    width:100%; max-width:430px; background:var(--surface); border-top-left-radius:22px; border-top-right-radius:22px;
+    border:1px solid var(--line); border-bottom:none; padding:22px 22px 28px;
+    transform:translateY(20px); transition:.25s;
+  }
+  .modal-bg.show .modal{transform:translateY(0);}
+  .modal h3{font-family:'Sora',sans-serif; margin:0 0 4px; font-size:17px;}
+  .modal p{color:var(--text-dim); font-size:13px; margin:0 0 18px;}
+  .modal-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:13.5px;}
+  .modal-row span:last-child{font-weight:600; font-family:'IBM Plex Mono',monospace;}
+  .modal-actions{display:flex; gap:10px; margin-top:18px;}
+  .modal-actions button{flex:1; padding:12px 0; border-radius:11px; font-weight:700; font-size:14px; border:none;}
+  .btn-cancel{background:var(--surface2); color:var(--text);}
+  .btn-confirm{background:var(--green); color:#06251a;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="simtag">⚠ SIMULATION — CYBERSECURITY TRAINING ENVIRONMENT — NO REAL FUNDS</div>
+
+  <!-- ============ TOP BAR ============ -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="v">V</div>
+      <div>
+        <div class="name">VEEKA-NGN</div>
+        <div class="sub">PLATFORM</div>
+      </div>
+    </div>
+    <div class="bell">🔔</div>
+  </div>
+
+  <!-- ============ HOME PAGE ============ -->
+  <div class="page active" data-page="home">
+    <div class="balance-card">
+      <div class="balance-label">AVAILABLE BALANCE</div>
+      <div class="balance-amt"><span class="ngn">₦</span><span id="balDisplay">0.00</span></div>
+      <div class="balance-row">
+        <div class="bal-btn deposit">+ Deposit</div>
+        <div class="bal-btn withdraw">Withdraw</div>
+      </div>
+    </div>
+
+    <div class="section-title">VIP Investment Tiers</div>
+    <div class="section-sub">Fixed 100-day plans. Select a tier to invest.</div>
+
+    <div id="vipList"></div>
+  </div>
+
+  <!-- ============ ORDER PAGE ============ -->
+  <div class="page" data-page="order">
+    <div class="section-title" style="margin-top:16px;">My Orders</div>
+    <div class="section-sub">Active and completed investment orders</div>
+    <div id="orderList"></div>
+  </div>
+
+  <!-- ============ INVITE PAGE ============ -->
+  <div class="page" data-page="invite">
+    <div class="invite-hero" style="margin-top:16px;">
+      <div class="big">₦0.00</div>
+      <div class="small">Total referral earnings</div>
+      <div class="code-row">
+        <div class="code">VEEKA-8F21QX</div>
+        <button class="copy-btn" id="copyCodeBtn">Copy</button>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="n">0</div><div class="l">Total invited</div></div>
+      <div class="stat-box"><div class="n">0</div><div class="l">Active investors</div></div>
+    </div>
+    <div class="section-title">Invited Users</div>
+    <div id="refList"></div>
+  </div>
+
+  <!-- ============ MINE PAGE ============ -->
+  <div class="page" data-page="mine">
+    <div class="profile-head" style="margin-top:16px;">
+      <div class="avatar">U</div>
+      <div>
+        <div class="p-name">Guest User</div>
+        <div class="p-id">ID: VK-000000</div>
+      </div>
+    </div>
+    <div class="section-title">Account</div>
+    <div class="menu-list" style="margin-bottom:16px;">
+      <div class="menu-item"><span class="mi">💳</span> Wallet balance <span class="arrow">›</span></div>
+      <div class="menu-item"><span class="mi">📄</span> Transaction history <span class="arrow">›</span></div>
+      <div class="menu-item"><span class="mi">👤</span> Profile details <span class="arrow">›</span></div>
+    </div>
+    <div class="section-title">Settings</div>
+    <div class="menu-list">
+      <div class="menu-item"><span class="mi">🔒</span> Security <span class="arrow">›</span></div>
+      <div class="menu-item"><span class="mi">🌐</span> Language <span class="arrow">›</span></div>
+      <div class="menu-item"><span class="mi">ℹ️</span> About this simulation <span class="arrow">›</span></div>
+    </div>
+  </div>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div class="bottomnav">
+    <div class="nav-btn active" data-nav="home"><span class="ic">🏠</span>Home</div>
+    <div class="nav-btn" data-nav="order"><span class="ic">🧾</span>Order</div>
+    <div class="nav-btn" data-nav="invite"><span class="ic">👥</span>Invite</div>
+    <div class="nav-btn" data-nav="mine"><span class="ic">👤</span>Mine</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ============ INVEST CONFIRM MODAL ============ -->
+  <div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3 id="modalTitle">Confirm investment</h3>
+      <p>Review the details below before confirming.</p>
+      <div class="modal-row"><span>VIP tier</span><span id="mTier"></span></div>
+      <div class="modal-row"><span>Deposit</span><span id="mDeposit"></span></div>
+      <div class="modal-row"><span>Duration</span><span id="mDuration"></span></div>
+      <div class="modal-row"><span>Daily income</span><span id="mDaily"></span></div>
+      <div class="modal-row"><span>Total income</span><span id="mTotal"></span></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="modalCancel">Cancel</button>
+        <button class="btn-confirm" id="modalConfirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- DATA (simulated, no backend) ---------------- */
+const VIP_TIERS = [
+  { id:'vip3', name:'VIP 3', deposit:20000,  duration:100, daily:5500,   total:550000 },
+  { id:'vip4', name:'VIP 4', deposit:40000,  duration:100, daily:10500,  total:1050000 },
+  { id:'vip5', name:'VIP 5', deposit:80000,  duration:100, daily:20200,  total:2020000 },
+  { id:'vip6', name:'VIP 6', deposit:160000, duration:100, daily:40500,  total:4050000 },
+  { id:'vip7', name:'VIP 7', deposit:320000, duration:100, daily:95000,  total:8500000 },
+  { id:'vip8', name:'VIP 8', deposit:640000, duration:100, daily:170000, total:17000000 },
+];
+
+let balance = 50000; // starting simulated demo balance
+let orders = JSON.parse(sessionStorage.getItem('sim_orders') || '[]');
+let refs = [];
+
+const fmt = n => '₦' + Number(n).toLocaleString('en-NG', {minimumFractionDigits: n % 1 !== 0 ? 2 : 0});
+
+/* ---------------- RENDER: VIP CARDS ---------------- */
+function roiPct(t){
+  // visual-only ring fill representing relative scale across tiers, capped 20-100
+  const max = VIP_TIERS[VIP_TIERS.length-1].total;
+  return Math.round(20 + (t.total/max)*80);
+}
+function renderVipList(){
+  const el = document.getElementById('vipList');
+  el.innerHTML = VIP_TIERS.map((t,i) => `
+    <div class="vip-card ${i>=4?'top':''}">
+      <div class="vip-top">
+        <div class="vip-badge" style="--pct:${roiPct(t)}"><span>${t.name.replace('VIP ','')}</span></div>
+        <div>
+          <div class="vip-name">${t.name} Plan</div>
+          <div class="vip-roi">${Math.round((t.total/t.deposit)*100).toLocaleString()}% return · ${t.duration} days</div>
+        </div>
+      </div>
+      <div class="vip-stats">
+        <div><div class="vs-label">DEPOSIT</div><div class="vs-val">${fmt(t.deposit)}</div></div>
+        <div><div class="vs-label">DURATION</div><div class="vs-val">${t.duration}d</div></div>
+        <div><div class="vs-label">DAILY</div><div class="vs-val">${fmt(t.daily)}</div></div>
+      </div>
+      <div class="vip-footer">
+        <div class="vip-total">
+          <div class="lbl">TOTAL INCOME</div>
+          <div class="amt"><span class="tick" data-total="${t.total}">${fmt(t.total)}</span></div>
+        </div>
+        <button class="invest-btn" data-invest="${t.id}">Invest</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* subtle "ticking" total — a classic hook pattern: numbers appear to be actively growing */
+function tickTotals(){
+  document.querySelectorAll('.tick').forEach(el=>{
+    const base = Number(el.dataset.total);
+    const jitter = base + Math.floor(Math.random()*3);
+    el.style.opacity = 0.55;
+    setTimeout(()=>{ el.textContent = fmt(jitter); el.style.opacity = 1; }, 180);
+  });
+}
+setInterval(tickTotals, 3200);
+
+/* ---------------- RENDER: ORDERS ---------------- */
+function renderOrders(){
+  const el = document.getElementById('orderList');
+  if(!orders.length){
+    el.innerHTML = `<div class="empty-state"><div class="ic">🧾</div>No orders yet.<br>Invest in a VIP tier from Home to see it here.</div>`;
+    return;
+  }
+  el.innerHTML = orders.slice().reverse().map(o => `
+    <div class="order-item">
+      <div class="order-icon">${o.tier.replace('VIP ','')}</div>
+      <div class="order-mid">
+        <div class="order-name">${o.tier} Plan</div>
+        <div class="order-date">Started ${o.date}</div>
+      </div>
+      <div class="order-right">
+        <div class="order-amt">${fmt(o.deposit)}</div>
+        <div class="status-pill status-active">ACTIVE</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------------- RENDER: INVITE ---------------- */
+function renderRefs(){
+  const el = document.getElementById('refList');
+  if(!refs.length){
+    el.innerHTML = `<div class="empty-state" style="padding:30px 20px;"><div class="ic">👥</div>No invited users yet.</div>`;
+    return;
+  }
+  el.innerHTML = refs.map(r => `
+    <div class="ref-row">
+      <div class="ref-avatar">${r.name[0]}</div>
+      <div style="flex:1;">
+        <div class="ref-name">${r.name}</div>
+        <div class="ref-date">${r.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------------- NAV ---------------- */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.nav;
+    document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.dataset.page===target));
+  });
+});
+
+/* ---------------- TOAST ---------------- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------------- INVEST FLOW ---------------- */
+const modalBg = document.getElementById('modalBg');
+let pendingTier = null;
+
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-invest]');
+  if(!btn) return;
+  const tier = VIP_TIERS.find(t=>t.id===btn.dataset.invest);
+  pendingTier = tier;
+  document.getElementById('mTier').textContent = tier.name;
+  document.getElementById('mDeposit').textContent = fmt(tier.deposit);
+  document.getElementById('mDuration').textContent = tier.duration + ' days';
+  document.getElementById('mDaily').textContent = fmt(tier.daily);
+  document.getElementById('mTotal').textContent = fmt(tier.total);
+  modalBg.classList.add('show');
+});
+
+document.getElementById('modalCancel').addEventListener('click', ()=> modalBg.classList.remove('show'));
+document.getElementById('modalBg').addEventListener('click', (e)=>{ if(e.target===modalBg) modalBg.classList.remove('show'); });
+
+document.getElementById('modalConfirm').addEventListener('click', ()=>{
+  if(!pendingTier) return;
+  if(balance < pendingTier.deposit){
+    modalBg.classList.remove('show');
+    showToast('Insufficient balance for ' + pendingTier.name + '. (Simulated — this is exactly where a real user would be pushed toward a "deposit" step.)');
+    return;
+  }
+  balance -= pendingTier.deposit;
+  updateBalance();
+  orders.push({
+    tier: pendingTier.name,
+    deposit: pendingTier.deposit,
+    date: new Date().toLocaleDateString('en-NG', {day:'2-digit', month:'short', year:'numeric'})
+  });
+  sessionStorage.setItem('sim_orders', JSON.stringify(orders));
+  renderOrders();
+  modalBg.classList.remove('show');
+  showToast(pendingTier.name + ' investment order created.');
+});
+
+function updateBalance(){
+  document.getElementById('balDisplay').textContent = balance.toLocaleString('en-NG');
+}
+
+/* ---------------- INVITE CODE COPY ---------------- */
+document.getElementById('copyCodeBtn').addEventListener('click', ()=>{
+  showToast('Referral code copied (simulated — no real link is generated).');
+});
+
+/* ---------------- INIT ---------------- */
+renderVipList();
+renderOrders();
+renderRefs();
+updateBalance();
+</script>
+</body>
+</html>
