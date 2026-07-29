@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetMe, useListTransactions } from "@workspace/api-client-react";
+import { useGetMe, useListTransactions, getListTransactionsQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
 import { formatNaira } from "@/lib/utils";
@@ -30,10 +30,10 @@ export default function HistoryPage() {
   const { data: user } = useGetMe();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["value"]>("all");
 
-  const { data: transactions, isLoading } = useListTransactions(
-    user ? { userId: user.id, ...(filter !== "all" ? { type: filter } : {}) } : undefined,
-    { query: { enabled: !!user } },
-  );
+  const historyParams = user ? { userId: user.id, ...(filter !== "all" ? { type: filter } : {}) } : undefined;
+  const { data: transactions, isLoading } = useListTransactions(historyParams, {
+    query: { enabled: !!user, queryKey: getListTransactionsQueryKey(historyParams) },
+  });
 
   return (
     <AppLayout>

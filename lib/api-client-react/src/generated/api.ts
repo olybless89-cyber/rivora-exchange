@@ -52,25 +52,6 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export type registerResponse201 = {
-  data: AuthResponse
-  status: 201
-}
-
-export type registerResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-    
-export type registerResponseSuccess = (registerResponse201) & {
-  headers: Headers;
-};
-export type registerResponseError = (registerResponse400) & {
-  headers: Headers;
-};
-
-export type registerResponse = (registerResponseSuccess | registerResponseError)
-
 export const getRegisterUrl = () => {
 
 
@@ -79,9 +60,9 @@ export const getRegisterUrl = () => {
   return `/auth/register`
 }
 
-export const register = async (registerRequest: RegisterRequest, options?: RequestInit): Promise<registerResponse> => {
+export const register = async (registerRequest: RegisterRequest, options?: RequestInit): Promise<AuthResponse> => {
   
-  return customFetch<registerResponse>(getRegisterUrl(),
+  return customFetch<AuthResponse>(getRegisterUrl(),
   {      
     ...options,
     method: 'POST',
@@ -137,25 +118,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type loginResponse200 = {
-  data: AuthResponse
-  status: 200
-}
-
-export type loginResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-    
-export type loginResponseSuccess = (loginResponse200) & {
-  headers: Headers;
-};
-export type loginResponseError = (loginResponse401) & {
-  headers: Headers;
-};
-
-export type loginResponse = (loginResponseSuccess | loginResponseError)
-
 export const getLoginUrl = () => {
 
 
@@ -164,9 +126,9 @@ export const getLoginUrl = () => {
   return `/auth/login`
 }
 
-export const login = async (loginRequest: LoginRequest, options?: RequestInit): Promise<loginResponse> => {
+export const login = async (loginRequest: LoginRequest, options?: RequestInit): Promise<AuthResponse> => {
   
-  return customFetch<loginResponse>(getLoginUrl(),
+  return customFetch<AuthResponse>(getLoginUrl(),
   {      
     ...options,
     method: 'POST',
@@ -222,18 +184,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type logoutResponse204 = {
-  data: void
-  status: 204
-}
-    
-export type logoutResponseSuccess = (logoutResponse204) & {
-  headers: Headers;
-};
-;
-
-export type logoutResponse = (logoutResponseSuccess)
-
 export const getLogoutUrl = () => {
 
 
@@ -242,9 +192,9 @@ export const getLogoutUrl = () => {
   return `/auth/logout`
 }
 
-export const logout = async ( options?: RequestInit): Promise<logoutResponse> => {
+export const logout = async ( options?: RequestInit): Promise<void> => {
   
-  return customFetch<logoutResponse>(getLogoutUrl(),
+  return customFetch<void>(getLogoutUrl(),
   {      
     ...options,
     method: 'POST'
@@ -299,25 +249,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type getMeResponse200 = {
-  data: User
-  status: 200
-}
-
-export type getMeResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-    
-export type getMeResponseSuccess = (getMeResponse200) & {
-  headers: Headers;
-};
-export type getMeResponseError = (getMeResponse401) & {
-  headers: Headers;
-};
-
-export type getMeResponse = (getMeResponseSuccess | getMeResponseError)
-
 export const getGetMeUrl = () => {
 
 
@@ -326,9 +257,9 @@ export const getGetMeUrl = () => {
   return `/auth/me`
 }
 
-export const getMe = async ( options?: RequestInit): Promise<getMeResponse> => {
+export const getMe = async ( options?: RequestInit): Promise<User> => {
   
-  return customFetch<getMeResponse>(getGetMeUrl(),
+  return customFetch<User>(getGetMeUrl(),
   {      
     ...options,
     method: 'GET'
@@ -389,25 +320,6 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
-export type changePasswordResponse200 = {
-  data: User
-  status: 200
-}
-
-export type changePasswordResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-    
-export type changePasswordResponseSuccess = (changePasswordResponse200) & {
-  headers: Headers;
-};
-export type changePasswordResponseError = (changePasswordResponse400) & {
-  headers: Headers;
-};
-
-export type changePasswordResponse = (changePasswordResponseSuccess | changePasswordResponseError)
-
 export const getChangePasswordUrl = () => {
 
 
@@ -416,9 +328,9 @@ export const getChangePasswordUrl = () => {
   return `/auth/change-password`
 }
 
-export const changePassword = async (changePasswordRequest: ChangePasswordRequest, options?: RequestInit): Promise<changePasswordResponse> => {
+export const changePassword = async (changePasswordRequest: ChangePasswordRequest, options?: RequestInit): Promise<User> => {
   
-  return customFetch<changePasswordResponse>(getChangePasswordUrl(),
+  return customFetch<User>(getChangePasswordUrl(),
   {      
     ...options,
     method: 'POST',
@@ -474,18 +386,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type updateMyBankDetailsResponse200 = {
-  data: User
-  status: 200
-}
-    
-export type updateMyBankDetailsResponseSuccess = (updateMyBankDetailsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type updateMyBankDetailsResponse = (updateMyBankDetailsResponseSuccess)
-
 export const getUpdateMyBankDetailsUrl = () => {
 
 
@@ -494,9 +394,9 @@ export const getUpdateMyBankDetailsUrl = () => {
   return `/users/me/bank`
 }
 
-export const updateMyBankDetails = async (bankDetails: BankDetails, options?: RequestInit): Promise<updateMyBankDetailsResponse> => {
+export const updateMyBankDetails = async (bankDetails: BankDetails, options?: RequestInit): Promise<User> => {
   
-  return customFetch<updateMyBankDetailsResponse>(getUpdateMyBankDetailsUrl(),
+  return customFetch<User>(getUpdateMyBankDetailsUrl(),
   {      
     ...options,
     method: 'PATCH',
@@ -552,18 +452,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type listUsersResponse200 = {
-  data: User[]
-  status: 200
-}
-    
-export type listUsersResponseSuccess = (listUsersResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listUsersResponse = (listUsersResponseSuccess)
-
 export const getListUsersUrl = (params?: ListUsersParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -579,9 +467,9 @@ export const getListUsersUrl = (params?: ListUsersParams,) => {
   return stringifiedParams.length > 0 ? `/users?${stringifiedParams}` : `/users`
 }
 
-export const listUsers = async (params?: ListUsersParams, options?: RequestInit): Promise<listUsersResponse> => {
+export const listUsers = async (params?: ListUsersParams, options?: RequestInit): Promise<User[]> => {
   
-  return customFetch<listUsersResponse>(getListUsersUrl(params),
+  return customFetch<User[]>(getListUsersUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -642,25 +530,6 @@ export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TErr
 
 
 
-export type getUserResponse200 = {
-  data: User
-  status: 200
-}
-
-export type getUserResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-    
-export type getUserResponseSuccess = (getUserResponse200) & {
-  headers: Headers;
-};
-export type getUserResponseError = (getUserResponse404) & {
-  headers: Headers;
-};
-
-export type getUserResponse = (getUserResponseSuccess | getUserResponseError)
-
 export const getGetUserUrl = (userId: string,) => {
 
 
@@ -669,9 +538,9 @@ export const getGetUserUrl = (userId: string,) => {
   return `/users/${userId}`
 }
 
-export const getUser = async (userId: string, options?: RequestInit): Promise<getUserResponse> => {
+export const getUser = async (userId: string, options?: RequestInit): Promise<User> => {
   
-  return customFetch<getUserResponse>(getGetUserUrl(userId),
+  return customFetch<User>(getGetUserUrl(userId),
   {      
     ...options,
     method: 'GET'
@@ -732,25 +601,6 @@ export function useGetUser<TData = Awaited<ReturnType<typeof getUser>>, TError =
 
 
 
-export type updateUserResponse200 = {
-  data: User
-  status: 200
-}
-
-export type updateUserResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-    
-export type updateUserResponseSuccess = (updateUserResponse200) & {
-  headers: Headers;
-};
-export type updateUserResponseError = (updateUserResponse404) & {
-  headers: Headers;
-};
-
-export type updateUserResponse = (updateUserResponseSuccess | updateUserResponseError)
-
 export const getUpdateUserUrl = (userId: string,) => {
 
 
@@ -760,9 +610,9 @@ export const getUpdateUserUrl = (userId: string,) => {
 }
 
 export const updateUser = async (userId: string,
-    updateUserRequest: UpdateUserRequest, options?: RequestInit): Promise<updateUserResponse> => {
+    updateUserRequest: UpdateUserRequest, options?: RequestInit): Promise<User> => {
   
-  return customFetch<updateUserResponse>(getUpdateUserUrl(userId),
+  return customFetch<User>(getUpdateUserUrl(userId),
   {      
     ...options,
     method: 'PATCH',
@@ -818,18 +668,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type listInvestmentPlansResponse200 = {
-  data: InvestmentPlan[]
-  status: 200
-}
-    
-export type listInvestmentPlansResponseSuccess = (listInvestmentPlansResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listInvestmentPlansResponse = (listInvestmentPlansResponseSuccess)
-
 export const getListInvestmentPlansUrl = (params?: ListInvestmentPlansParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -845,9 +683,9 @@ export const getListInvestmentPlansUrl = (params?: ListInvestmentPlansParams,) =
   return stringifiedParams.length > 0 ? `/investment-plans?${stringifiedParams}` : `/investment-plans`
 }
 
-export const listInvestmentPlans = async (params?: ListInvestmentPlansParams, options?: RequestInit): Promise<listInvestmentPlansResponse> => {
+export const listInvestmentPlans = async (params?: ListInvestmentPlansParams, options?: RequestInit): Promise<InvestmentPlan[]> => {
   
-  return customFetch<listInvestmentPlansResponse>(getListInvestmentPlansUrl(params),
+  return customFetch<InvestmentPlan[]>(getListInvestmentPlansUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -908,18 +746,6 @@ export function useListInvestmentPlans<TData = Awaited<ReturnType<typeof listInv
 
 
 
-export type createInvestmentPlanResponse201 = {
-  data: InvestmentPlan
-  status: 201
-}
-    
-export type createInvestmentPlanResponseSuccess = (createInvestmentPlanResponse201) & {
-  headers: Headers;
-};
-;
-
-export type createInvestmentPlanResponse = (createInvestmentPlanResponseSuccess)
-
 export const getCreateInvestmentPlanUrl = () => {
 
 
@@ -928,9 +754,9 @@ export const getCreateInvestmentPlanUrl = () => {
   return `/investment-plans`
 }
 
-export const createInvestmentPlan = async (createInvestmentPlanRequest: CreateInvestmentPlanRequest, options?: RequestInit): Promise<createInvestmentPlanResponse> => {
+export const createInvestmentPlan = async (createInvestmentPlanRequest: CreateInvestmentPlanRequest, options?: RequestInit): Promise<InvestmentPlan> => {
   
-  return customFetch<createInvestmentPlanResponse>(getCreateInvestmentPlanUrl(),
+  return customFetch<InvestmentPlan>(getCreateInvestmentPlanUrl(),
   {      
     ...options,
     method: 'POST',
@@ -986,25 +812,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type updateInvestmentPlanResponse200 = {
-  data: InvestmentPlan
-  status: 200
-}
-
-export type updateInvestmentPlanResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-    
-export type updateInvestmentPlanResponseSuccess = (updateInvestmentPlanResponse200) & {
-  headers: Headers;
-};
-export type updateInvestmentPlanResponseError = (updateInvestmentPlanResponse404) & {
-  headers: Headers;
-};
-
-export type updateInvestmentPlanResponse = (updateInvestmentPlanResponseSuccess | updateInvestmentPlanResponseError)
-
 export const getUpdateInvestmentPlanUrl = (planId: string,) => {
 
 
@@ -1014,9 +821,9 @@ export const getUpdateInvestmentPlanUrl = (planId: string,) => {
 }
 
 export const updateInvestmentPlan = async (planId: string,
-    updateInvestmentPlanRequest: UpdateInvestmentPlanRequest, options?: RequestInit): Promise<updateInvestmentPlanResponse> => {
+    updateInvestmentPlanRequest: UpdateInvestmentPlanRequest, options?: RequestInit): Promise<InvestmentPlan> => {
   
-  return customFetch<updateInvestmentPlanResponse>(getUpdateInvestmentPlanUrl(planId),
+  return customFetch<InvestmentPlan>(getUpdateInvestmentPlanUrl(planId),
   {      
     ...options,
     method: 'PATCH',
@@ -1072,25 +879,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type deleteInvestmentPlanResponse204 = {
-  data: void
-  status: 204
-}
-
-export type deleteInvestmentPlanResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-    
-export type deleteInvestmentPlanResponseSuccess = (deleteInvestmentPlanResponse204) & {
-  headers: Headers;
-};
-export type deleteInvestmentPlanResponseError = (deleteInvestmentPlanResponse404) & {
-  headers: Headers;
-};
-
-export type deleteInvestmentPlanResponse = (deleteInvestmentPlanResponseSuccess | deleteInvestmentPlanResponseError)
-
 export const getDeleteInvestmentPlanUrl = (planId: string,) => {
 
 
@@ -1099,9 +887,9 @@ export const getDeleteInvestmentPlanUrl = (planId: string,) => {
   return `/investment-plans/${planId}`
 }
 
-export const deleteInvestmentPlan = async (planId: string, options?: RequestInit): Promise<deleteInvestmentPlanResponse> => {
+export const deleteInvestmentPlan = async (planId: string, options?: RequestInit): Promise<void> => {
   
-  return customFetch<deleteInvestmentPlanResponse>(getDeleteInvestmentPlanUrl(planId),
+  return customFetch<void>(getDeleteInvestmentPlanUrl(planId),
   {      
     ...options,
     method: 'DELETE'
@@ -1156,18 +944,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type listInvestmentsResponse200 = {
-  data: UserInvestment[]
-  status: 200
-}
-    
-export type listInvestmentsResponseSuccess = (listInvestmentsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listInvestmentsResponse = (listInvestmentsResponseSuccess)
-
 export const getListInvestmentsUrl = (params?: ListInvestmentsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1183,9 +959,9 @@ export const getListInvestmentsUrl = (params?: ListInvestmentsParams,) => {
   return stringifiedParams.length > 0 ? `/investments?${stringifiedParams}` : `/investments`
 }
 
-export const listInvestments = async (params?: ListInvestmentsParams, options?: RequestInit): Promise<listInvestmentsResponse> => {
+export const listInvestments = async (params?: ListInvestmentsParams, options?: RequestInit): Promise<UserInvestment[]> => {
   
-  return customFetch<listInvestmentsResponse>(getListInvestmentsUrl(params),
+  return customFetch<UserInvestment[]>(getListInvestmentsUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -1246,25 +1022,6 @@ export function useListInvestments<TData = Awaited<ReturnType<typeof listInvestm
 
 
 
-export type createInvestmentResponse201 = {
-  data: UserInvestment
-  status: 201
-}
-
-export type createInvestmentResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-    
-export type createInvestmentResponseSuccess = (createInvestmentResponse201) & {
-  headers: Headers;
-};
-export type createInvestmentResponseError = (createInvestmentResponse400) & {
-  headers: Headers;
-};
-
-export type createInvestmentResponse = (createInvestmentResponseSuccess | createInvestmentResponseError)
-
 export const getCreateInvestmentUrl = () => {
 
 
@@ -1273,9 +1030,9 @@ export const getCreateInvestmentUrl = () => {
   return `/investments`
 }
 
-export const createInvestment = async (createInvestmentRequest: CreateInvestmentRequest, options?: RequestInit): Promise<createInvestmentResponse> => {
+export const createInvestment = async (createInvestmentRequest: CreateInvestmentRequest, options?: RequestInit): Promise<UserInvestment> => {
   
-  return customFetch<createInvestmentResponse>(getCreateInvestmentUrl(),
+  return customFetch<UserInvestment>(getCreateInvestmentUrl(),
   {      
     ...options,
     method: 'POST',
@@ -1331,18 +1088,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type listDepositRequestsResponse200 = {
-  data: DepositRequest[]
-  status: 200
-}
-    
-export type listDepositRequestsResponseSuccess = (listDepositRequestsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listDepositRequestsResponse = (listDepositRequestsResponseSuccess)
-
 export const getListDepositRequestsUrl = (params?: ListDepositRequestsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1358,9 +1103,9 @@ export const getListDepositRequestsUrl = (params?: ListDepositRequestsParams,) =
   return stringifiedParams.length > 0 ? `/deposit-requests?${stringifiedParams}` : `/deposit-requests`
 }
 
-export const listDepositRequests = async (params?: ListDepositRequestsParams, options?: RequestInit): Promise<listDepositRequestsResponse> => {
+export const listDepositRequests = async (params?: ListDepositRequestsParams, options?: RequestInit): Promise<DepositRequest[]> => {
   
-  return customFetch<listDepositRequestsResponse>(getListDepositRequestsUrl(params),
+  return customFetch<DepositRequest[]>(getListDepositRequestsUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -1421,25 +1166,6 @@ export function useListDepositRequests<TData = Awaited<ReturnType<typeof listDep
 
 
 
-export type createDepositRequestResponse201 = {
-  data: DepositRequest
-  status: 201
-}
-
-export type createDepositRequestResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-    
-export type createDepositRequestResponseSuccess = (createDepositRequestResponse201) & {
-  headers: Headers;
-};
-export type createDepositRequestResponseError = (createDepositRequestResponse400) & {
-  headers: Headers;
-};
-
-export type createDepositRequestResponse = (createDepositRequestResponseSuccess | createDepositRequestResponseError)
-
 export const getCreateDepositRequestUrl = () => {
 
 
@@ -1448,9 +1174,9 @@ export const getCreateDepositRequestUrl = () => {
   return `/deposit-requests`
 }
 
-export const createDepositRequest = async (createDepositRequestBody: CreateDepositRequestBody, options?: RequestInit): Promise<createDepositRequestResponse> => {
+export const createDepositRequest = async (createDepositRequestBody: CreateDepositRequestBody, options?: RequestInit): Promise<DepositRequest> => {
   
-  return customFetch<createDepositRequestResponse>(getCreateDepositRequestUrl(),
+  return customFetch<DepositRequest>(getCreateDepositRequestUrl(),
   {      
     ...options,
     method: 'POST',
@@ -1506,25 +1232,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type updateDepositRequestResponse200 = {
-  data: DepositRequest
-  status: 200
-}
-
-export type updateDepositRequestResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-    
-export type updateDepositRequestResponseSuccess = (updateDepositRequestResponse200) & {
-  headers: Headers;
-};
-export type updateDepositRequestResponseError = (updateDepositRequestResponse404) & {
-  headers: Headers;
-};
-
-export type updateDepositRequestResponse = (updateDepositRequestResponseSuccess | updateDepositRequestResponseError)
-
 export const getUpdateDepositRequestUrl = (requestId: string,) => {
 
 
@@ -1534,9 +1241,9 @@ export const getUpdateDepositRequestUrl = (requestId: string,) => {
 }
 
 export const updateDepositRequest = async (requestId: string,
-    updateRequestStatusBody: UpdateRequestStatusBody, options?: RequestInit): Promise<updateDepositRequestResponse> => {
+    updateRequestStatusBody: UpdateRequestStatusBody, options?: RequestInit): Promise<DepositRequest> => {
   
-  return customFetch<updateDepositRequestResponse>(getUpdateDepositRequestUrl(requestId),
+  return customFetch<DepositRequest>(getUpdateDepositRequestUrl(requestId),
   {      
     ...options,
     method: 'PATCH',
@@ -1592,18 +1299,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type listWithdrawalRequestsResponse200 = {
-  data: WithdrawalRequest[]
-  status: 200
-}
-    
-export type listWithdrawalRequestsResponseSuccess = (listWithdrawalRequestsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listWithdrawalRequestsResponse = (listWithdrawalRequestsResponseSuccess)
-
 export const getListWithdrawalRequestsUrl = (params?: ListWithdrawalRequestsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1619,9 +1314,9 @@ export const getListWithdrawalRequestsUrl = (params?: ListWithdrawalRequestsPara
   return stringifiedParams.length > 0 ? `/withdrawal-requests?${stringifiedParams}` : `/withdrawal-requests`
 }
 
-export const listWithdrawalRequests = async (params?: ListWithdrawalRequestsParams, options?: RequestInit): Promise<listWithdrawalRequestsResponse> => {
+export const listWithdrawalRequests = async (params?: ListWithdrawalRequestsParams, options?: RequestInit): Promise<WithdrawalRequest[]> => {
   
-  return customFetch<listWithdrawalRequestsResponse>(getListWithdrawalRequestsUrl(params),
+  return customFetch<WithdrawalRequest[]>(getListWithdrawalRequestsUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -1682,25 +1377,6 @@ export function useListWithdrawalRequests<TData = Awaited<ReturnType<typeof list
 
 
 
-export type createWithdrawalRequestResponse201 = {
-  data: WithdrawalRequest
-  status: 201
-}
-
-export type createWithdrawalRequestResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-    
-export type createWithdrawalRequestResponseSuccess = (createWithdrawalRequestResponse201) & {
-  headers: Headers;
-};
-export type createWithdrawalRequestResponseError = (createWithdrawalRequestResponse400) & {
-  headers: Headers;
-};
-
-export type createWithdrawalRequestResponse = (createWithdrawalRequestResponseSuccess | createWithdrawalRequestResponseError)
-
 export const getCreateWithdrawalRequestUrl = () => {
 
 
@@ -1709,9 +1385,9 @@ export const getCreateWithdrawalRequestUrl = () => {
   return `/withdrawal-requests`
 }
 
-export const createWithdrawalRequest = async (createWithdrawalRequestBody: CreateWithdrawalRequestBody, options?: RequestInit): Promise<createWithdrawalRequestResponse> => {
+export const createWithdrawalRequest = async (createWithdrawalRequestBody: CreateWithdrawalRequestBody, options?: RequestInit): Promise<WithdrawalRequest> => {
   
-  return customFetch<createWithdrawalRequestResponse>(getCreateWithdrawalRequestUrl(),
+  return customFetch<WithdrawalRequest>(getCreateWithdrawalRequestUrl(),
   {      
     ...options,
     method: 'POST',
@@ -1767,25 +1443,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type updateWithdrawalRequestResponse200 = {
-  data: WithdrawalRequest
-  status: 200
-}
-
-export type updateWithdrawalRequestResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-    
-export type updateWithdrawalRequestResponseSuccess = (updateWithdrawalRequestResponse200) & {
-  headers: Headers;
-};
-export type updateWithdrawalRequestResponseError = (updateWithdrawalRequestResponse404) & {
-  headers: Headers;
-};
-
-export type updateWithdrawalRequestResponse = (updateWithdrawalRequestResponseSuccess | updateWithdrawalRequestResponseError)
-
 export const getUpdateWithdrawalRequestUrl = (requestId: string,) => {
 
 
@@ -1795,9 +1452,9 @@ export const getUpdateWithdrawalRequestUrl = (requestId: string,) => {
 }
 
 export const updateWithdrawalRequest = async (requestId: string,
-    updateRequestStatusBody: UpdateRequestStatusBody, options?: RequestInit): Promise<updateWithdrawalRequestResponse> => {
+    updateRequestStatusBody: UpdateRequestStatusBody, options?: RequestInit): Promise<WithdrawalRequest> => {
   
-  return customFetch<updateWithdrawalRequestResponse>(getUpdateWithdrawalRequestUrl(requestId),
+  return customFetch<WithdrawalRequest>(getUpdateWithdrawalRequestUrl(requestId),
   {      
     ...options,
     method: 'PATCH',
@@ -1853,18 +1510,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions);
     }
     
-export type listTransactionsResponse200 = {
-  data: Transaction[]
-  status: 200
-}
-    
-export type listTransactionsResponseSuccess = (listTransactionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listTransactionsResponse = (listTransactionsResponseSuccess)
-
 export const getListTransactionsUrl = (params?: ListTransactionsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1880,9 +1525,9 @@ export const getListTransactionsUrl = (params?: ListTransactionsParams,) => {
   return stringifiedParams.length > 0 ? `/transactions?${stringifiedParams}` : `/transactions`
 }
 
-export const listTransactions = async (params?: ListTransactionsParams, options?: RequestInit): Promise<listTransactionsResponse> => {
+export const listTransactions = async (params?: ListTransactionsParams, options?: RequestInit): Promise<Transaction[]> => {
   
-  return customFetch<listTransactionsResponse>(getListTransactionsUrl(params),
+  return customFetch<Transaction[]>(getListTransactionsUrl(params),
   {      
     ...options,
     method: 'GET'

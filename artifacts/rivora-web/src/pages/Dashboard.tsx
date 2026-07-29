@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useGetMe, useListInvestmentPlans, useListTransactions } from "@workspace/api-client-react";
+import { useGetMe, useListInvestmentPlans, useListTransactions, getListTransactionsQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
 import { formatNaira, cn } from "@/lib/utils";
@@ -17,7 +17,10 @@ const TYPE_LABEL: Record<string, string> = {
 export default function DashboardPage() {
   const { data: user } = useGetMe();
   const { data: plans } = useListInvestmentPlans({ activeOnly: true });
-  const { data: transactions } = useListTransactions(user ? { userId: user.id } : undefined, { query: { enabled: !!user } });
+  const transactionsParams = user ? { userId: user.id } : undefined;
+  const { data: transactions } = useListTransactions(transactionsParams, {
+    query: { enabled: !!user, queryKey: getListTransactionsQueryKey(transactionsParams) },
+  });
   const { toast } = useToast();
 
   const recent = (transactions ?? []).slice(0, 5);
