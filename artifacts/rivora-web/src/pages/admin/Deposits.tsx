@@ -17,9 +17,9 @@ import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "#e8b339",
-  approved: "#00A300",
-  rejected: "#e31937",
+  pending: "#C98A2E",
+  approved: "#D4AF37",
+  rejected: "#C0392B",
 };
 
 export default function AdminDepositsPage() {
@@ -66,7 +66,7 @@ export default function AdminDepositsPage() {
         </Select>
       </div>
 
-      {isLoading && <p style={{ color: "#8b95a1" }}>Loading requests…</p>}
+      {isLoading && <p style={{ color: "#9C9C9C" }}>Loading requests…</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(requests ?? []).map((r) => (
@@ -74,11 +74,11 @@ export default function AdminDepositsPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: r.status === "pending" ? 12 : 0 }}>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: "#fff" }}>{userName(r.userId)}</p>
-                <p style={{ fontSize: 12, color: "#8b95a1", margin: "3px 0 0" }}>{r.paymentMethod}</p>
-                <p style={{ fontSize: 11, color: "#8b95a1", margin: "3px 0 0" }}>{format(new Date(r.createdAt), "MMM d, yyyy · h:mm a")}</p>
+                <p style={{ fontSize: 12, color: "#9C9C9C", margin: "3px 0 0" }}>{r.paymentMethod}</p>
+                <p style={{ fontSize: 11, color: "#9C9C9C", margin: "3px 0 0" }}>{format(new Date(r.createdAt), "MMM d, yyyy · h:mm a")}</p>
               </div>
               <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#00A300", margin: 0 }}>{formatNaira(r.amount)}</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: "#D4AF37", margin: 0 }}>{formatNaira(r.amount)}</p>
                 <p style={{ fontSize: 10, textTransform: "uppercase", margin: "3px 0 0", color: STATUS_COLOR[r.status] }}>{r.status}</p>
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function AdminDepositsPage() {
           </Card>
         ))}
         {!isLoading && (requests ?? []).length === 0 && (
-          <p style={{ color: "#8b95a1", textAlign: "center", padding: 24 }}>No deposit requests found.</p>
+          <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>No deposit requests found.</p>
         )}
       </div>
     </AdminLayout>

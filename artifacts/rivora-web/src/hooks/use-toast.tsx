@@ -45,13 +45,13 @@ export function Toaster() {
     }}>
       {toasts.map((t) => (
         <div key={t.id} style={{
-          background: t.variant === "destructive" ? "#3a1220" : "#161B2E",
-          border: `1px solid ${t.variant === "destructive" ? "#e31937" : "rgba(255,255,255,0.1)"}`,
+          background: t.variant === "destructive" ? "#2A1113" : "#141414",
+          border: `1px solid ${t.variant === "destructive" ? "#C0392B" : "rgba(255,255,255,0.1)"}`,
           borderRadius: 10, padding: "12px 16px", color: "#e8eaec",
           boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
         }}>
           <div style={{ fontSize: 14, fontWeight: 600 }}>{t.title}</div>
-          {t.description && <div style={{ fontSize: 13, color: "#8b95a1", marginTop: 4 }}>{t.description}</div>}
+          {t.description && <div style={{ fontSize: 13, color: "#9C9C9C", marginTop: 4 }}>{t.description}</div>}
         </div>
       ))}
     </div>

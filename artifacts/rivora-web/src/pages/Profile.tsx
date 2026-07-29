@@ -48,19 +48,19 @@ export default function ProfilePage() {
       <div style={{ padding: "24px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
           <div style={{
-            width: 56, height: 56, borderRadius: "50%", background: "rgba(0,163,0,0.12)",
+            width: 56, height: 56, borderRadius: "50%", background: "rgba(212,175,55,0.12)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
-            <UserIcon size={26} color="#00A300" />
+            <UserIcon size={26} color="#D4AF37" />
           </div>
           <div>
             <p style={{ fontSize: 17, fontWeight: 600, margin: 0, color: "#fff" }}>{user?.fullName}</p>
-            <p style={{ fontSize: 13, color: "#8b95a1", margin: "2px 0 0" }}>{user?.phone}</p>
+            <p style={{ fontSize: 13, color: "#9C9C9C", margin: "2px 0 0" }}>{user?.phone}</p>
           </div>
         </div>
 
-        <Card style={{ padding: 18, marginBottom: 20, background: "linear-gradient(135deg, #161B2E, #0d1520)" }}>
-          <p style={{ fontSize: 12, color: "#8b95a1", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>
+        <Card style={{ padding: 18, marginBottom: 20, background: "linear-gradient(135deg, #141414, #050505)" }}>
+          <p style={{ fontSize: 12, color: "#9C9C9C", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>
             Total Balance
           </p>
           <p style={{ fontSize: 26, fontWeight: 700, margin: "6px 0 0", color: "#fff" }}>
@@ -71,11 +71,11 @@ export default function ProfilePage() {
         <Card style={{ padding: 16, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Share2 size={16} color="#00A300" />
+              <Share2 size={16} color="#D4AF37" />
               <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: "#fff" }}>Referral Code</p>
             </div>
           </div>
-          <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: "#00A300", margin: "0 0 10px" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: "0.06em", color: "#D4AF37", margin: "0 0 10px" }}>
             {user?.referralCode}
           </p>
           <Button variant="outline" size="sm" onClick={copyReferral} className="w-full">
@@ -107,15 +107,15 @@ function SettingRow({ icon: Icon, label, onClick }: { icon: any; label: string; 
       onClick={onClick}
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
-        padding: "16px", background: "#161B2E", border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
+        padding: "16px", background: "#141414", border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
         cursor: "pointer", textAlign: "left",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <Icon size={18} color="#00A300" />
+        <Icon size={18} color="#D4AF37" />
         <span style={{ fontSize: 14, color: "#e8eaec" }}>{label}</span>
       </div>
-      <ChevronRight size={16} color="#8b95a1" />
+      <ChevronRight size={16} color="#9C9C9C" />
     </button>
   );
 }

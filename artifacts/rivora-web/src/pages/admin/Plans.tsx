@@ -52,7 +52,7 @@ export default function AdminPlansPage() {
         </Button>
       </div>
 
-      {isLoading && <p style={{ color: "#8b95a1" }}>Loading plans…</p>}
+      {isLoading && <p style={{ color: "#9C9C9C" }}>Loading plans…</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(plans ?? []).map((plan) => (
@@ -62,13 +62,13 @@ export default function AdminPlansPage() {
                 <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: "#fff" }}>
                   {plan.name}
                   {!plan.isActive && (
-                    <span style={{ marginLeft: 8, fontSize: 10, color: "#8b95a1", border: "1px solid #8b95a1", borderRadius: 6, padding: "1px 6px" }}>INACTIVE</span>
+                    <span style={{ marginLeft: 8, fontSize: 10, color: "#9C9C9C", border: "1px solid #9C9C9C", borderRadius: 6, padding: "1px 6px" }}>INACTIVE</span>
                   )}
                 </p>
-                <p style={{ fontSize: 12, color: "#8b95a1", margin: "3px 0 0" }}>Min {formatNaira(plan.minAmount)} · {plan.durationDays} days</p>
+                <p style={{ fontSize: 12, color: "#9C9C9C", margin: "3px 0 0" }}>Min {formatNaira(plan.minAmount)} · {plan.durationDays} days</p>
               </div>
-              <p style={{ fontSize: 18, fontWeight: 700, color: "#00A300", margin: 0 }}>
-                {Number(plan.dailyRate)}%<span style={{ fontSize: 10, fontWeight: 400, color: "#8b95a1" }}>/day</span>
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                {Number(plan.dailyRate)}%<span style={{ fontSize: 10, fontWeight: 400, color: "#9C9C9C" }}>/day</span>
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -80,7 +80,7 @@ export default function AdminPlansPage() {
           </Card>
         ))}
         {!isLoading && (plans ?? []).length === 0 && (
-          <p style={{ color: "#8b95a1", textAlign: "center", padding: 24 }}>No investment plans yet.</p>
+          <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>No investment plans yet.</p>
         )}
       </div>
 

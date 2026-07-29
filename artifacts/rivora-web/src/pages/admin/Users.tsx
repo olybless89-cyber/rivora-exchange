@@ -26,7 +26,7 @@ export default function AdminUsersPage() {
     <AdminLayout title="Users">
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: "1 1 200px" }}>
-          <Search size={15} color="#8b95a1" style={{ position: "absolute", left: 12, top: 13 }} />
+          <Search size={15} color="#9C9C9C" style={{ position: "absolute", left: 12, top: 13 }} />
           <Input placeholder="Search by name or phone" value={search} onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: 36 }} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
         </Select>
       </div>
 
-      {isLoading && <p style={{ color: "#8b95a1" }}>Loading users…</p>}
+      {isLoading && <p style={{ color: "#9C9C9C" }}>Loading users…</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(users ?? []).map((u) => (
@@ -51,13 +51,13 @@ export default function AdminUsersPage() {
                 <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: "#fff" }}>
                   {u.fullName}
                   {u.role === "admin" && (
-                    <span style={{ marginLeft: 8, fontSize: 10, color: "#00A300", border: "1px solid #00A300", borderRadius: 6, padding: "1px 6px" }}>ADMIN</span>
+                    <span style={{ marginLeft: 8, fontSize: 10, color: "#D4AF37", border: "1px solid #D4AF37", borderRadius: 6, padding: "1px 6px" }}>ADMIN</span>
                   )}
                 </p>
-                <p style={{ fontSize: 12, color: "#8b95a1", margin: "3px 0 0" }}>{u.phone}</p>
-                <p style={{ fontSize: 12, color: "#8b95a1", margin: "3px 0 0" }}>
+                <p style={{ fontSize: 12, color: "#9C9C9C", margin: "3px 0 0" }}>{u.phone}</p>
+                <p style={{ fontSize: 12, color: "#9C9C9C", margin: "3px 0 0" }}>
                   Balance: {formatNaira(u.balance)} · {" "}
-                  <span style={{ color: u.status === "active" ? "#00A300" : "#e31937" }}>{u.status}</span>
+                  <span style={{ color: u.status === "active" ? "#D4AF37" : "#C0392B" }}>{u.status}</span>
                 </p>
               </div>
               <Button size="sm" variant="outline" onClick={() => setEditingUser(u)}>Edit</Button>
@@ -65,7 +65,7 @@ export default function AdminUsersPage() {
           </Card>
         ))}
         {!isLoading && (users ?? []).length === 0 && (
-          <p style={{ color: "#8b95a1", textAlign: "center", padding: 24 }}>No users found.</p>
+          <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>No users found.</p>
         )}
       </div>
 

@@ -58,9 +58,9 @@ export default function WithdrawPage() {
     return (
       <AppLayout>
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
-          <CheckCircle2 size={56} color="#00A300" style={{ marginBottom: 16 }} />
-          <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 12px" }}>Withdrawal Requested</h1>
-          <p style={{ color: "#8b95a1", fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>
+          <CheckCircle2 size={56} color="#D4AF37" style={{ marginBottom: 16 }} />
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 12px" }}>Withdrawal Requested</h1>
+          <p style={{ color: "#9C9C9C", fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>
             You'll receive {formatNaira(submitted.net)} (after the 20% fee) once our team approves this request.
           </p>
           <Button onClick={() => { setSubmitted(null); setAmount(""); setBankName(""); setAccountNumber(""); setAccountName(""); }} className="w-full">
@@ -74,12 +74,12 @@ export default function WithdrawPage() {
   return (
     <AppLayout>
       <div style={{ padding: "24px 20px" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px" }}>Withdraw</h1>
-        <p style={{ color: "#8b95a1", fontSize: 13, margin: "0 0 20px" }}>Balance: {formatNaira(user?.balance ?? 0)}</p>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 8px" }}>Withdraw</h1>
+        <p style={{ color: "#9C9C9C", fontSize: 13, margin: "0 0 20px" }}>Balance: {formatNaira(user?.balance ?? 0)}</p>
 
         {!withinWindow && (
-          <Card style={{ padding: 14, marginBottom: 20, background: "rgba(227,25,55,0.08)", border: "1px solid rgba(227,25,55,0.3)", display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <AlertTriangle size={18} color="#e31937" style={{ flexShrink: 0, marginTop: 1 }} />
+          <Card style={{ padding: 14, marginBottom: 20, background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.3)", display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <AlertTriangle size={18} color="#C0392B" style={{ flexShrink: 0, marginTop: 1 }} />
             <p style={{ fontSize: 12, color: "#e8eaec", margin: 0, lineHeight: 1.6 }}>
               Withdrawals are only available <strong>7:00 PM – 11:00 PM (Nigeria time), Monday to Saturday</strong>.
               You can still fill this form, but submission will be blocked until the next window.
@@ -125,8 +125,8 @@ export default function WithdrawPage() {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}>
-      <span style={{ fontSize: 12, color: "#8b95a1" }}>{label}</span>
-      <span style={{ fontSize: bold ? 15 : 12, fontWeight: bold ? 700 : 400, color: bold ? "#00A300" : "#e8eaec" }}>{value}</span>
+      <span style={{ fontSize: 12, color: "#9C9C9C" }}>{label}</span>
+      <span style={{ fontSize: bold ? 15 : 12, fontWeight: bold ? 700 : 400, color: bold ? "#D4AF37" : "#e8eaec" }}>{value}</span>
     </div>
   );
 }

@@ -37,11 +37,11 @@ export function AdminLayout({ title, children }: { title: string; children: Reac
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "20px 20px 0" }}>
-        <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#8b95a1", fontSize: 12, textDecoration: "none", marginBottom: 12 }}>
+        <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#9C9C9C", fontSize: 12, textDecoration: "none", marginBottom: 12 }}>
           <ArrowLeft size={14} />
           Back to app
         </Link>
-        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 16px", color: "#fff" }}>{title}</h1>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 16px", color: "#fff" }}>{title}</h1>
       </div>
 
       <div style={{ display: "flex", gap: 6, overflowX: "auto", padding: "0 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -55,9 +55,9 @@ export function AdminLayout({ title, children }: { title: string; children: Reac
               style={{
                 flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20,
                 fontSize: 12, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap",
-                border: active ? "1px solid #00A300" : "1px solid rgba(255,255,255,0.08)",
-                background: active ? "rgba(0,163,0,0.12)" : "transparent",
-                color: active ? "#00A300" : "#8b95a1",
+                border: active ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.08)",
+                background: active ? "rgba(212,175,55,0.12)" : "transparent",
+                color: active ? "#D4AF37" : "#9C9C9C",
               }}
             >
               <Icon size={14} />

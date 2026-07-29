@@ -9,7 +9,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #0B1220;
+  background: #0A0A0A;
   color: #e8eaec;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -20,13 +20,19 @@ html, body {
   margin: 0 auto;
   min-height: 100dvh;
   position: relative;
-  background: #0B1220;
+  background: #0A0A0A;
 }
 
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
+  background: rgba(212,175,55,0.25);
   border-radius: 3px;
+}
+
+/* Tabular figures for money/percentage values so digits stay aligned in
+   lists and balance displays -- a small but real "premium fintech" detail. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

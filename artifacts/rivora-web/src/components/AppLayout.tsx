@@ -36,7 +36,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <nav
         style={{
           position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
-          width: "100%", maxWidth: 430, background: "#0d1520", borderTop: "1px solid rgba(255,255,255,0.06)",
+          width: "100%", maxWidth: 430, background: "#050505", borderTop: "1px solid rgba(255,255,255,0.06)",
           display: "flex", justifyContent: "space-around", padding: "10px 4px", zIndex: 50,
         }}
       >
@@ -49,7 +49,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               href={item.href}
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                color: active ? "#00A300" : "#8b95a1", fontSize: 11, textDecoration: "none", flex: 1,
+                color: active ? "#D4AF37" : "#9C9C9C", fontSize: 11, textDecoration: "none", flex: 1,
               }}
             >
               <Icon size={20} />

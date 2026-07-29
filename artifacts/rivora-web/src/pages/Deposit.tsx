@@ -46,9 +46,9 @@ export default function DepositPage() {
     return (
       <AppLayout>
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
-          <CheckCircle2 size={56} color="#00A300" style={{ marginBottom: 16 }} />
-          <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 12px" }}>Deposit Submitted</h1>
-          <p style={{ color: "#8b95a1", fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>
+          <CheckCircle2 size={56} color="#D4AF37" style={{ marginBottom: 16 }} />
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 12px" }}>Deposit Submitted</h1>
+          <p style={{ color: "#9C9C9C", fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>
             Your deposit of {formatNaira(amount)} via {method} is pending approval. Your balance
             will update once our team confirms it{isFirstDeposit ? `, along with your ${formatNaira(WELCOME_BONUS)} welcome bonus` : ""}.
           </p>
@@ -61,11 +61,11 @@ export default function DepositPage() {
   return (
     <AppLayout>
       <div style={{ padding: "24px 20px" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 20px" }}>Deposit</h1>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 20px" }}>Deposit</h1>
 
         {isFirstDeposit && (
-          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(0,163,0,0.08)", border: "1px solid rgba(0,163,0,0.3)" }}>
-            <p style={{ fontSize: 13, color: "#00A300", margin: 0, fontWeight: 600 }}>
+          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.3)" }}>
+            <p style={{ fontSize: 13, color: "#D4AF37", margin: 0, fontWeight: 600 }}>
               🎁 Get a {formatNaira(WELCOME_BONUS)} welcome bonus on your first deposit!
             </p>
           </Card>
@@ -80,7 +80,7 @@ export default function DepositPage() {
             onChange={(e) => setAmount(e.target.value)}
             className="mt-2"
           />
-          <p style={{ fontSize: 12, color: "#8b95a1", marginTop: 6 }}>Minimum deposit: {formatNaira(MIN_DEPOSIT)}</p>
+          <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 6 }}>Minimum deposit: {formatNaira(MIN_DEPOSIT)}</p>
         </div>
 
         <div style={{ marginBottom: 24 }}>
@@ -97,7 +97,7 @@ export default function DepositPage() {
         </div>
 
         <Card style={{ padding: 16, marginBottom: 24 }}>
-          <p style={{ fontSize: 12, color: "#8b95a1", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0, lineHeight: 1.6 }}>
             Submit your deposit request below, then contact support with your payment reference for
             confirmation. Your balance updates automatically once approved.
           </p>

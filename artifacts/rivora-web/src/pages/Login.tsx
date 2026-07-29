@@ -50,8 +50,8 @@ export default function LoginPage() {
     <div style={{ minHeight: "100dvh", padding: "40px 24px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <img src="/rivora-logo.png" alt="RIVORA EXCHANGE" style={{ width: 72, height: 72, objectFit: "contain", margin: "0 auto 12px" }} />
-        <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>Welcome Back</h1>
-        <p style={{ color: "#8b95a1", fontSize: 13, marginTop: 4 }}>Sign in to your RIVORA EXCHANGE account</p>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: 0 }}>Welcome Back</h1>
+        <p style={{ color: "#9C9C9C", fontSize: 13, marginTop: 4 }}>Sign in to your RIVORA EXCHANGE account</p>
       </div>
 
       <Form {...form}>
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 <FormControl>
                   <div style={{ position: "relative" }}>
                     <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                    <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", color: "#8b95a1", cursor: "pointer" }}>
+                    <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", color: "#9C9C9C", cursor: "pointer" }}>
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
             )}
           />
           <div style={{ textAlign: "right", marginTop: -12 }}>
-            <Link href="/forgot-password" style={{ color: "#00A300", fontSize: 12, textDecoration: "none" }}>Forgot password?</Link>
+            <Link href="/forgot-password" style={{ color: "#D4AF37", fontSize: 12, textDecoration: "none" }}>Forgot password?</Link>
           </div>
           <Button type="submit" disabled={loginMutation.isPending} className="w-full">
             {loginMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
@@ -102,9 +102,9 @@ export default function LoginPage() {
         </form>
       </Form>
 
-      <p style={{ textAlign: "center", color: "#8b95a1", fontSize: 13, marginTop: 28 }}>
+      <p style={{ textAlign: "center", color: "#9C9C9C", fontSize: 13, marginTop: 28 }}>
         Don't have an account?{" "}
-        <Link href="/register" style={{ color: "#00A300", textDecoration: "none" }}>Register</Link>
+        <Link href="/register" style={{ color: "#D4AF37", textDecoration: "none" }}>Register</Link>
       </p>
     </div>
   );

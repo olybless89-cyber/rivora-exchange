@@ -38,7 +38,7 @@ export default function HistoryPage() {
   return (
     <AppLayout>
       <div style={{ padding: "24px 20px" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 16px" }}>Transaction History</h1>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 16px" }}>Transaction History</h1>
 
         <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 20, paddingBottom: 4 }}>
           {FILTERS.map((f) => {
@@ -49,9 +49,9 @@ export default function HistoryPage() {
                 onClick={() => setFilter(f.value)}
                 style={{
                   flexShrink: 0, padding: "8px 16px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                  border: active ? "1px solid #00A300" : "1px solid rgba(255,255,255,0.08)",
-                  background: active ? "rgba(0,163,0,0.12)" : "transparent",
-                  color: active ? "#00A300" : "#8b95a1", cursor: "pointer", whiteSpace: "nowrap",
+                  border: active ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.08)",
+                  background: active ? "rgba(212,175,55,0.12)" : "transparent",
+                  color: active ? "#D4AF37" : "#9C9C9C", cursor: "pointer", whiteSpace: "nowrap",
                 }}
               >
                 {f.label}
@@ -60,11 +60,11 @@ export default function HistoryPage() {
           })}
         </div>
 
-        {isLoading && <p style={{ color: "#8b95a1" }}>Loading transactions…</p>}
+        {isLoading && <p style={{ color: "#9C9C9C" }}>Loading transactions…</p>}
 
         <Card style={{ overflow: "hidden" }}>
           {!isLoading && (transactions ?? []).length === 0 && (
-            <p style={{ padding: 24, textAlign: "center", color: "#8b95a1", fontSize: 13, margin: 0 }}>
+            <p style={{ padding: 24, textAlign: "center", color: "#9C9C9C", fontSize: 13, margin: 0 }}>
               No transactions found.
             </p>
           )}
@@ -78,24 +78,24 @@ export default function HistoryPage() {
             >
               <div>
                 <p style={{ fontSize: 13, fontWeight: 500, margin: 0, color: "#fff" }}>{TYPE_LABEL[tx.type] ?? tx.type}</p>
-                <p style={{ fontSize: 11, color: "#8b95a1", margin: "3px 0 0" }}>
+                <p style={{ fontSize: 11, color: "#9C9C9C", margin: "3px 0 0" }}>
                   {format(new Date(tx.createdAt), "MMM d, yyyy · h:mm a")}
                 </p>
                 {tx.description && (
-                  <p style={{ fontSize: 11, color: "#8b95a1", margin: "3px 0 0" }}>{tx.description}</p>
+                  <p style={{ fontSize: 11, color: "#9C9C9C", margin: "3px 0 0" }}>{tx.description}</p>
                 )}
-                <p style={{ fontSize: 10, color: "#8b95a1", margin: "3px 0 0" }}>Ref: {tx.reference}</p>
+                <p style={{ fontSize: 10, color: "#9C9C9C", margin: "3px 0 0" }}>Ref: {tx.reference}</p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{
                   fontSize: 14, fontWeight: 600, margin: 0,
-                  color: tx.type === "withdrawal" ? "#e31937" : "#00A300",
+                  color: tx.type === "withdrawal" ? "#C0392B" : "#D4AF37",
                 }}>
                   {tx.type === "withdrawal" ? "-" : "+"}{formatNaira(tx.amount)}
                 </p>
                 <p style={{
                   fontSize: 10, margin: "3px 0 0", textTransform: "uppercase", letterSpacing: "0.04em",
-                  color: tx.status === "pending" ? "#e8b339" : tx.status === "rejected" ? "#e31937" : "#8b95a1",
+                  color: tx.status === "pending" ? "#C98A2E" : tx.status === "rejected" ? "#C0392B" : "#9C9C9C",
                 }}>
                   {STATUS_LABEL[tx.status] ?? tx.status}
                 </p>

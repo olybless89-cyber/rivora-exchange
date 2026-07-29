@@ -15,7 +15,7 @@ export const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-card p-6",
+        "fixed left-1/2 top-1/2 z-50 w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-primary/20 bg-card p-6 shadow-[0_0_40px_rgba(212,175,55,0.06)]",
         className,
       )}
       {...props}
@@ -36,7 +36,7 @@ export const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title ref={ref} className={cn("text-lg font-medium text-white", className)} {...props} />
+  <DialogPrimitive.Title ref={ref} className={cn("font-display text-lg font-semibold text-white", className)} {...props} />
 ));
 DialogTitle.displayName = "DialogTitle";
 export const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

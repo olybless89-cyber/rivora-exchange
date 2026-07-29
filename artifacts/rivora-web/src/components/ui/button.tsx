@@ -8,10 +8,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-white hover:opacity-90",
+        // Dark text on the gold fill -- white-on-gold reads poorly (low
+        // contrast) and cheap; black-on-gold is the standard premium
+        // metallic-button treatment.
+        default: "bg-primary text-black font-semibold hover:bg-primary-light",
         outline: "border border-white/10 text-white hover:bg-white/5",
         ghost: "hover:bg-white/5 text-white",
-        destructive: "bg-red-600 text-white hover:bg-red-700",
+        destructive: "bg-danger text-white hover:opacity-90",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

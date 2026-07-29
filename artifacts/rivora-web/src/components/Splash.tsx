@@ -19,20 +19,21 @@ export function Splash() {
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 10000,
-        background: "#0B1220",
+        background: "#0A0A0A",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         padding: 32, textAlign: "center",
       }}
     >
       <img src="/rivora-logo.png" alt="RIVORA EXCHANGE" style={{ width: 200, height: 200, objectFit: "contain", marginBottom: 24 }} />
-      <p style={{ color: "#8b95a1", fontSize: 15, lineHeight: 1.7, maxWidth: 340, marginBottom: 40 }}>
+      <p style={{ color: "#9C9C9C", fontSize: 15, lineHeight: 1.7, maxWidth: 340, marginBottom: 40 }}>
         Your trusted investor portal. Trade, invest, and grow your wealth with confidence.
       </p>
       <button
         onClick={handleDismiss}
         style={{
-          width: "100%", maxWidth: 280, padding: "14px 0", background: "#00A300", border: "none",
-          color: "#fff", borderRadius: 8, fontSize: 15, fontWeight: 700,
+          width: "100%", maxWidth: 280, padding: "14px 0",
+          background: "linear-gradient(135deg, #E8C874, #D4AF37 45%, #A6821F)", border: "none",
+          color: "#0A0A0A", borderRadius: 8, fontSize: 15, fontWeight: 700,
           letterSpacing: "0.05em", cursor: "pointer",
         }}
       >

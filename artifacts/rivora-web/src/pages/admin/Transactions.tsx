@@ -14,9 +14,9 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "#e8b339",
-  completed: "#00A300",
-  rejected: "#e31937",
+  pending: "#C98A2E",
+  completed: "#D4AF37",
+  rejected: "#C0392B",
 };
 
 export default function AdminTransactionsPage() {
@@ -45,11 +45,11 @@ export default function AdminTransactionsPage() {
         </Select>
       </div>
 
-      {isLoading && <p style={{ color: "#8b95a1" }}>Loading transactions…</p>}
+      {isLoading && <p style={{ color: "#9C9C9C" }}>Loading transactions…</p>}
 
       <Card style={{ overflow: "hidden" }}>
         {!isLoading && (transactions ?? []).length === 0 && (
-          <p style={{ padding: 24, textAlign: "center", color: "#8b95a1", fontSize: 13, margin: 0 }}>
+          <p style={{ padding: 24, textAlign: "center", color: "#9C9C9C", fontSize: 13, margin: 0 }}>
             No transactions found.
           </p>
         )}
@@ -63,15 +63,15 @@ export default function AdminTransactionsPage() {
           >
             <div>
               <p style={{ fontSize: 13, fontWeight: 500, margin: 0, color: "#fff" }}>{userName(tx.userId)}</p>
-              <p style={{ fontSize: 11, color: "#8b95a1", margin: "3px 0 0" }}>
+              <p style={{ fontSize: 11, color: "#9C9C9C", margin: "3px 0 0" }}>
                 {TYPE_LABEL[tx.type] ?? tx.type} · {format(new Date(tx.createdAt), "MMM d, yyyy · h:mm a")}
               </p>
-              <p style={{ fontSize: 10, color: "#8b95a1", margin: "3px 0 0" }}>Ref: {tx.reference}</p>
+              <p style={{ fontSize: 10, color: "#9C9C9C", margin: "3px 0 0" }}>Ref: {tx.reference}</p>
             </div>
             <div style={{ textAlign: "right" }}>
               <p style={{
                 fontSize: 14, fontWeight: 600, margin: 0,
-                color: tx.type === "withdrawal" ? "#e31937" : "#00A300",
+                color: tx.type === "withdrawal" ? "#C0392B" : "#D4AF37",
               }}>
                 {tx.type === "withdrawal" ? "-" : "+"}{formatNaira(tx.amount)}
               </p>

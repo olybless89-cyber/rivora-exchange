@@ -107,13 +107,13 @@ export default function RegisterPage() {
     <div style={{ minHeight: "100dvh", padding: "40px 24px", display: "flex", flexDirection: "column" }}>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <img src="/rivora-logo.png" alt="RIVORA EXCHANGE" style={{ width: 64, height: 64, objectFit: "contain", margin: "0 auto 12px" }} />
-        <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>Create Account</h1>
-        <p style={{ color: "#8b95a1", fontSize: 13, marginTop: 4 }}>Join RIVORA EXCHANGE — Trade. Invest. Grow.</p>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: 0 }}>Create Account</h1>
+        <p style={{ color: "#9C9C9C", fontSize: 13, marginTop: 4 }}>Join RIVORA EXCHANGE — Trade. Invest. Grow.</p>
       </div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
         {[1, 2, 3].map((s) => (
-          <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? "#00A300" : "rgba(255,255,255,0.1)" }} />
+          <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? "#D4AF37" : "rgba(255,255,255,0.1)" }} />
         ))}
       </div>
 
@@ -166,7 +166,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <div style={{ position: "relative" }}>
                         <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                        <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", color: "#8b95a1", cursor: "pointer" }}>
+                        <button type="button" onClick={() => setShowPassword((v) => !v)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", color: "#9C9C9C", cursor: "pointer" }}>
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
@@ -184,7 +184,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <div style={{ position: "relative" }}>
                         <Input type={showConfirm ? "text" : "password"} placeholder="••••••••" {...field} />
-                        <button type="button" onClick={() => setShowConfirm((v) => !v)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", color: "#8b95a1", cursor: "pointer" }}>
+                        <button type="button" onClick={() => setShowConfirm((v) => !v)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", color: "#9C9C9C", cursor: "pointer" }}>
                           {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
@@ -217,11 +217,11 @@ export default function RegisterPage() {
                 <FormLabel>Verify You're Human</FormLabel>
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  background: "rgba(0,163,0,0.08)", border: "1px solid rgba(0,163,0,0.3)", borderRadius: 8,
+                  background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 8,
                   padding: "12px 16px", marginTop: 8, marginBottom: 12,
                 }}>
                   <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: 6, color: "#e8eaec", textDecoration: "line-through", fontStyle: "italic" }}>{captcha}</span>
-                  <button type="button" onClick={refreshCaptcha} style={{ background: "none", border: "none", color: "#00A300", cursor: "pointer" }}>
+                  <button type="button" onClick={refreshCaptcha} style={{ background: "none", border: "none", color: "#D4AF37", cursor: "pointer" }}>
                     <RefreshCw size={18} />
                   </button>
                 </div>
@@ -230,7 +230,7 @@ export default function RegisterPage() {
                   value={captchaInput}
                   onChange={(e) => { setCaptchaInput(e.target.value); setCaptchaError(null); }}
                 />
-                {captchaError && <p style={{ color: "#e31937", fontSize: 12, marginTop: 6 }}>{captchaError}</p>}
+                {captchaError && <p style={{ color: "#C0392B", fontSize: 12, marginTop: 6 }}>{captchaError}</p>}
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <Button type="button" variant="outline" onClick={goBack} className="flex-1">Back</Button>
@@ -243,9 +243,9 @@ export default function RegisterPage() {
         </form>
       </Form>
 
-      <p style={{ textAlign: "center", color: "#8b95a1", fontSize: 13, marginTop: 28 }}>
+      <p style={{ textAlign: "center", color: "#9C9C9C", fontSize: 13, marginTop: 28 }}>
         Already have an account?{" "}
-        <Link href="/login" style={{ color: "#00A300", textDecoration: "none" }}>Sign in</Link>
+        <Link href="/login" style={{ color: "#D4AF37", textDecoration: "none" }}>Sign in</Link>
       </p>
     </div>
   );

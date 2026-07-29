@@ -48,10 +48,10 @@ export default function InvestPage() {
   return (
     <AppLayout>
       <div style={{ padding: "24px 20px" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 4px" }}>Investment Plans</h1>
-        <p style={{ color: "#8b95a1", fontSize: 13, margin: "0 0 20px" }}>Balance: {formatNaira(user?.balance ?? 0)}</p>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 4px" }}>Investment Plans</h1>
+        <p style={{ color: "#9C9C9C", fontSize: 13, margin: "0 0 20px" }}>Balance: {formatNaira(user?.balance ?? 0)}</p>
 
-        {isLoading && <p style={{ color: "#8b95a1" }}>Loading plans…</p>}
+        {isLoading && <p style={{ color: "#9C9C9C" }}>Loading plans…</p>}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {(plans ?? []).map((plan) => (
@@ -59,10 +59,10 @@ export default function InvestPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <p style={{ fontSize: 16, fontWeight: 600, margin: 0, color: "#fff" }}>{plan.name}</p>
-                  <p style={{ fontSize: 12, color: "#8b95a1", margin: "6px 0 0" }}>Min investment: {formatNaira(plan.minAmount)}</p>
-                  <p style={{ fontSize: 12, color: "#8b95a1", margin: "2px 0 0" }}>Duration: {plan.durationDays} days</p>
+                  <p style={{ fontSize: 12, color: "#9C9C9C", margin: "6px 0 0" }}>Min investment: {formatNaira(plan.minAmount)}</p>
+                  <p style={{ fontSize: 12, color: "#9C9C9C", margin: "2px 0 0" }}>Duration: {plan.durationDays} days</p>
                 </div>
-                <p style={{ fontSize: 22, fontWeight: 700, color: "#00A300", margin: 0 }}>{Number(plan.dailyRate)}%<span style={{ fontSize: 11, fontWeight: 400, color: "#8b95a1" }}>/day</span></p>
+                <p style={{ fontSize: 22, fontWeight: 700, color: "#D4AF37", margin: 0 }}>{Number(plan.dailyRate)}%<span style={{ fontSize: 11, fontWeight: 400, color: "#9C9C9C" }}>/day</span></p>
               </div>
               <Button
                 className="w-full mt-4"
@@ -73,7 +73,7 @@ export default function InvestPage() {
             </Card>
           ))}
           {!isLoading && (plans ?? []).length === 0 && (
-            <p style={{ color: "#8b95a1", textAlign: "center", padding: 24 }}>No investment plans available right now.</p>
+            <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>No investment plans available right now.</p>
           )}
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function InvestPage() {
             <DialogTitle>Invest in {selectedPlan?.name}</DialogTitle>
           </DialogHeader>
           <div style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12, color: "#8b95a1", textTransform: "uppercase", letterSpacing: "0.05em" }}>Amount (₦)</label>
+            <label style={{ fontSize: 12, color: "#9C9C9C", textTransform: "uppercase", letterSpacing: "0.05em" }}>Amount (₦)</label>
             <Input
               type="number"
               value={amount}
@@ -92,7 +92,7 @@ export default function InvestPage() {
               className="mt-2"
             />
             {selectedPlan && (
-              <p style={{ fontSize: 12, color: "#8b95a1", marginTop: 8 }}>
+              <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 8 }}>
                 Minimum: {formatNaira(selectedPlan.minAmount)} · Daily return: {Number(selectedPlan.dailyRate)}% · {selectedPlan.durationDays} days
               </p>
             )}
