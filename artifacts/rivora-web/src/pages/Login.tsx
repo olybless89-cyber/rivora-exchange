@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { HeroBanner } from "@/components/HeroBanner";
 
 const loginSchema = z.object({
   phone: z.string().min(10, "Enter your phone number"),
@@ -53,6 +54,8 @@ export default function LoginPage() {
         <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: 0 }}>Welcome Back</h1>
         <p style={{ color: "#9C9C9C", fontSize: 13, marginTop: 4 }}>Sign in to your RIVORA EXCHANGE account</p>
       </div>
+
+      <HeroBanner />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
