@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { db, investmentPlansTable } from "@workspace/db";
 
-// RIVO-LV1–LV10  |  5% daily  |  90-day duration
+// Exact plans matching reference image — RIVO-LV1 to LV10, 5%/day, 90 days
 export const PLAN_SEED_DATA = [
   { name: "RIVO-LV1",  minAmount:  20_000, dailyRate: 5, durationDays: 90 },
   { name: "RIVO-LV2",  minAmount:  50_000, dailyRate: 5, durationDays: 90 },
@@ -15,12 +15,10 @@ export const PLAN_SEED_DATA = [
   { name: "RIVO-LV10", minAmount: 890_000, dailyRate: 5, durationDays: 90 },
 ];
 
+// ALWAYS wipe and re-insert on every deploy — guarantees DB matches code exactly.
 export async function seedInvestmentPlansIfEmpty(): Promise<void> {
-  const existing = await db.select().from(investmentPlansTable).limit(1);
-  const needsMigration = existing.length === 0 || !existing[0].name.startsWith("RIVO-LV");
-  if (!needsMigration) return;
   await db.delete(investmentPlansTable);
-  console.log("Auto-migration: replacing plans with RIVO-LV1–LV10");
+  console.log("Plans wiped — inserting RIVO-LV1–LV10 (5%/day, 90 days)");
   for (const plan of PLAN_SEED_DATA) {
     await db.insert(investmentPlansTable).values({
       id: crypto.randomUUID(),
@@ -31,5 +29,5 @@ export async function seedInvestmentPlansIfEmpty(): Promise<void> {
       isActive: true,
     });
   }
-  console.log("Investment plans seeded: RIVO-LV1–LV10 ✅");
+  console.log("✅ RIVO-LV1–LV10 seeded successfully");
 }
