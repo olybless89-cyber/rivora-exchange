@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { HeroBanner } from "@/components/HeroBanner";
 
 const fullSchema = z
   .object({
@@ -110,6 +111,8 @@ export default function RegisterPage() {
         <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: 0 }}>Create Account</h1>
         <p style={{ color: "#9C9C9C", fontSize: 13, marginTop: 4 }}>Join RIVORA EXCHANGE — Trade. Invest. Grow.</p>
       </div>
+
+      <HeroBanner />
 
       <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
         {[1, 2, 3].map((s) => (
