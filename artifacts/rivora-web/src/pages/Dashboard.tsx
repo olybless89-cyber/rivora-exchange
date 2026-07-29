@@ -56,7 +56,7 @@ export default function DashboardPage() {
           <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Investment Plans</h2>
           <Link href="/invest" style={{ color: "#D4AF37", fontSize: 12, textDecoration: "none" }}>View all</Link>
         </div>
-        <div style={{ display: "flex", gap: 10, overflowX: "auto", marginBottom: 28, paddingBottom: 4 }}>
+                <div style={{ display: "flex", gap: 10, overflowX: "auto", marginBottom: 28, paddingBottom: 4 }}>
           {(plans ?? []).slice(0, 6).map((plan) => {
             const dailyIncome = (Number(plan.minAmount) * Number(plan.dailyRate)) / 100;
             return (

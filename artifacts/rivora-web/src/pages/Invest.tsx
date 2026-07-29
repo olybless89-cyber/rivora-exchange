@@ -87,7 +87,6 @@ export default function InvestPage() {
           )}
         </div>
       </div>
-
       <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Invest in {selectedPlan?.name}</DialogTitle></DialogHeader>
