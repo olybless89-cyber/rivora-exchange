@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatNaira } from "@/lib/utils";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
-const MIN_DEPOSIT = 10_000;
+const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
 
 export default function DepositPage() {

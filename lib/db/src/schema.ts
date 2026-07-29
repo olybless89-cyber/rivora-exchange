@@ -22,6 +22,7 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
   "withdrawal",
   "investment",
   "bonus",
+  "referral_bonus",
 ]);
 export const transactionStatusEnum = pgEnum("transaction_status", [
   "pending",

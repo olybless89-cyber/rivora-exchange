@@ -10,6 +10,7 @@ const TYPE_LABEL: Record<string, string> = {
   withdrawal: "Withdrawal",
   investment: "Investment",
   bonus: "Bonus",
+  referral_bonus: "Referral Bonus",
 };
 
 const STATUS_LABEL: Record<string, string> = {

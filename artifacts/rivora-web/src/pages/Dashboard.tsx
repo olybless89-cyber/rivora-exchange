@@ -12,6 +12,7 @@ const TYPE_LABEL: Record<string, string> = {
   withdrawal: "Withdrawal",
   investment: "Investment",
   bonus: "Bonus",
+  referral_bonus: "Referral Bonus",
 };
 
 export default function DashboardPage() {

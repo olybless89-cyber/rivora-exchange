@@ -512,7 +512,7 @@ components:
       enum: [active, inactive]
     TransactionType:
       type: string
-      enum: [deposit, withdrawal, investment, bonus]
+      enum: [deposit, withdrawal, investment, bonus, referral_bonus]
     TransactionStatus:
       type: string
       enum: [pending, completed, rejected]

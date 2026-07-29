@@ -9,3 +9,4 @@ build/
 *.bak[0-9]*
 tsconfig.tsbuildinfo
 .vercel
+*.save

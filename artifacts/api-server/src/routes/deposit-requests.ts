@@ -6,8 +6,14 @@ import { createDepositRequestBody, updateDepositRequestBody } from "@workspace/a
 import { requireAuth, requireAdmin } from "../lib/auth-middleware.js";
 import { generateReference } from "../lib/reference.js";
 
-const MIN_DEPOSIT = 10_000;
+const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
+
+// 3-level referral commission, paid out of the referred user's own money
+// on EVERY approved deposit (not just their first) -- Level 1 is whoever
+// directly referred this user, Level 2 is that person's referrer, Level 3
+// is theirs. Index 0 = Level 1.
+const REFERRAL_LEVEL_RATES = [0.20, 0.02, 0.02];
 
 const router: IRouter = Router();
 
@@ -96,6 +102,43 @@ router.patch("/deposit-requests/:requestId", requireAuth, requireAdmin, async (r
           reference: generateReference(),
           description: `Deposit via ${request.paymentMethod}`,
         });
+
+        // Referral commissions -- walk up to 3 levels of the referral
+        // chain from the depositing user, crediting each ancestor a
+        // percentage of THIS deposit. Runs on every approved deposit
+        // (unlike the welcome bonus below, which is first-deposit-only),
+        // paid out of the deposit amount itself, not the depositor's
+        // balance -- the depositor is never debited for it.
+        let ancestorId: string | null = user.referredBy;
+        for (let level = 0; level < REFERRAL_LEVEL_RATES.length && ancestorId; level++) {
+          const [ancestor] = await tx.select().from(usersTable).where(eq(usersTable.id, ancestorId));
+          if (!ancestor) break;
+
+          const rate = REFERRAL_LEVEL_RATES[level];
+          const commission = Math.round(depositAmount * rate * 100) / 100;
+
+          if (commission > 0) {
+            await tx.insert(transactionsTable).values({
+              id: crypto.randomUUID(),
+              userId: ancestor.id,
+              type: "referral_bonus",
+              amount: String(commission),
+              status: "completed",
+              reference: generateReference(),
+              description: `Level ${level + 1} referral commission from ${user.fullName}'s deposit`,
+            });
+
+            await tx
+              .update(usersTable)
+              .set({
+                balance: String(Number(ancestor.balance) + commission),
+                updatedAt: new Date(),
+              })
+              .where(eq(usersTable.id, ancestor.id));
+          }
+
+          ancestorId = ancestor.referredBy;
+        }
 
         const shouldCreditWelcomeBonus = !user.hasReceivedWelcomeBonus;
         if (shouldCreditWelcomeBonus) {

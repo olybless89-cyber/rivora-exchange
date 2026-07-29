@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useGetMe } from "@workspace/api-client-react";
 import { Home, TrendingUp, ArrowDownToLine, ArrowUpFromLine, User } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { WelcomeModal } from "@/components/WelcomeModal";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -31,6 +32,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", paddingBottom: 76 }}>
+      <WelcomeModal />
       <div style={{ flex: 1 }}>{children}</div>
 
       <nav
