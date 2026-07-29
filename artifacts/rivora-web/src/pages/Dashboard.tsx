@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useGetMe, useListInvestmentPlans, useListTransactions, getListTransactionsQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
+import { PlanCarousel } from "@/components/PlanCarousel";
 import { formatNaira, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon } from "lucide-react";
@@ -56,20 +57,7 @@ export default function DashboardPage() {
           <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Investment Plans</h2>
           <Link href="/invest" style={{ color: "#D4AF37", fontSize: 12, textDecoration: "none" }}>View all</Link>
         </div>
-                <div style={{ display: "flex", gap: 10, overflowX: "auto", marginBottom: 28, paddingBottom: 4 }}>
-          {(plans ?? []).slice(0, 6).map((plan) => {
-            const dailyIncome = (Number(plan.minAmount) * Number(plan.dailyRate)) / 100;
-            return (
-              <Card key={plan.id} style={{ minWidth: 150, padding: 14, flexShrink: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#D4AF37", fontStyle: "italic" }}>{plan.name}</p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#D4AF37", margin: "6px 0 0" }}>
-                  {formatNaira(dailyIncome)}<span style={{ fontSize: 10, color: "#9C9C9C", fontWeight: 400 }}>/day</span>
-                </p>
-                <p style={{ fontSize: 11, color: "#9C9C9C", margin: "4px 0 0" }}>Min {formatNaira(plan.minAmount)}</p>
-              </Card>
-            );
-          })}
-        </div>
+        <PlanCarousel plans={plans ?? []} />
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Recent Transactions</h2>
@@ -105,6 +93,8 @@ export default function DashboardPage() {
   );
 }
 
+
+
 function QuickAction({ href, icon: Icon, label }: { href: string; icon: any; label: string }) {
   return (
     <Link href={href} style={{ textDecoration: "none" }}>
@@ -126,3 +116,4 @@ function QuickActionContent({ icon: Icon, label }: { icon: any; label: string })
     </div>
   );
 }
+
