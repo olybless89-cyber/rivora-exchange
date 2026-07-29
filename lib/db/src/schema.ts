@@ -71,7 +71,9 @@ export const usersTable = pgTable("users", {
 });
 
 // ---------------------------------------------------------------------------
-// Investment plans (admin-managed; seeded with the 10 RIVO-LV tiers)
+// Investment plans (admin-managed; seeded with VIP 3–8 tiers)
+// Run `pnpm --filter @workspace/api-server tsx src/lib/migrate-plans.ts`
+// to replace all plans in a live database without restarting the server.
 // ---------------------------------------------------------------------------
 
 export const investmentPlansTable = pgTable("investment_plans", {

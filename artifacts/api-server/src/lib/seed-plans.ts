@@ -1,21 +1,21 @@
 import crypto from "node:crypto";
 import { db, investmentPlansTable } from "@workspace/db";
 
-// The 10 RIVO-LV investment tiers. Every tier pays a flat 4% daily yield
-// regardless of amount invested -- durationDays is a reasonable starting
-// default, freely editable afterwards from Admin > Investment Plans,
-// nothing here is hardcoded into the app logic itself.
+// 6 VIP investment tiers sourced from the updated plan schedule.
+// Daily income and total income per tier:
+//   VIP 3:  ₦20,000  →  ₦5,500/day   · ₦550,000  total (100 days)
+//   VIP 4:  ₦40,000  →  ₦10,500/day  · ₦1,050,000 total (100 days)
+//   VIP 5:  ₦80,000  →  ₦20,200/day  · ₦2,020,000 total (100 days)
+//   VIP 6:  ₦160,000 →  ₦40,500/day  · ₦4,050,000 total (100 days)
+//   VIP 7:  ₦320,000 →  ₦95,000/day  · ₦8,500,000 total (100 days)
+//   VIP 8:  ₦640,000 →  ₦170,000/day · ₦17,000,000 total (100 days)
 export const PLAN_SEED_DATA = [
-  { name: "RIVO-LV1", minAmount: 20_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV2", minAmount: 50_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV3", minAmount: 80_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV4", minAmount: 120_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV5", minAmount: 150_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV6", minAmount: 180_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV7", minAmount: 220_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV8", minAmount: 250_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV9", minAmount: 500_000, dailyRate: 4.0, durationDays: 30 },
-  { name: "RIVO-LV10", minAmount: 890_000, dailyRate: 4.0, durationDays: 30 },
+  { name: "VIP 3", minAmount: 20_000,  dailyRate: 27.5,     durationDays: 100 },
+  { name: "VIP 4", minAmount: 40_000,  dailyRate: 26.25,    durationDays: 100 },
+  { name: "VIP 5", minAmount: 80_000,  dailyRate: 25.25,    durationDays: 100 },
+  { name: "VIP 6", minAmount: 160_000, dailyRate: 25.3125,  durationDays: 100 },
+  { name: "VIP 7", minAmount: 320_000, dailyRate: 29.6875,  durationDays: 100 },
+  { name: "VIP 8", minAmount: 640_000, dailyRate: 26.5625,  durationDays: 100 },
 ];
 
 export async function seedInvestmentPlansIfEmpty(): Promise<void> {

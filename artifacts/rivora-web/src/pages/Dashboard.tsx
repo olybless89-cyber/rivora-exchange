@@ -57,13 +57,18 @@ export default function DashboardPage() {
           <Link href="/invest" style={{ color: "#D4AF37", fontSize: 12, textDecoration: "none" }}>View all</Link>
         </div>
         <div style={{ display: "flex", gap: 10, overflowX: "auto", marginBottom: 28, paddingBottom: 4 }}>
-          {(plans ?? []).slice(0, 5).map((plan) => (
-            <Card key={plan.id} style={{ minWidth: 140, padding: 14, flexShrink: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: "#fff" }}>{plan.name}</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "#D4AF37", margin: "6px 0 0" }}>{Number(plan.dailyRate)}%<span style={{ fontSize: 11, color: "#9C9C9C", fontWeight: 400 }}>/day</span></p>
-              <p style={{ fontSize: 11, color: "#9C9C9C", margin: "6px 0 0" }}>Min {formatNaira(plan.minAmount)}</p>
-            </Card>
-          ))}
+          {(plans ?? []).slice(0, 6).map((plan) => {
+            const dailyIncome = (Number(plan.minAmount) * Number(plan.dailyRate)) / 100;
+            return (
+              <Card key={plan.id} style={{ minWidth: 150, padding: 14, flexShrink: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#D4AF37", fontStyle: "italic" }}>{plan.name}</p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#D4AF37", margin: "6px 0 0" }}>
+                  {formatNaira(dailyIncome)}<span style={{ fontSize: 10, color: "#9C9C9C", fontWeight: 400 }}>/day</span>
+                </p>
+                <p style={{ fontSize: 11, color: "#9C9C9C", margin: "4px 0 0" }}>Min {formatNaira(plan.minAmount)}</p>
+              </Card>
+            );
+          })}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>

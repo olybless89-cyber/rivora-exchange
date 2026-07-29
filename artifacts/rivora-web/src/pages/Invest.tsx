@@ -54,24 +54,39 @@ export default function InvestPage() {
         {isLoading && <p style={{ color: "#9C9C9C" }}>Loading plans…</p>}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {(plans ?? []).map((plan) => (
-            <Card key={plan.id} style={{ padding: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <p style={{ fontSize: 16, fontWeight: 600, margin: 0, color: "#fff" }}>{plan.name}</p>
-                  <p style={{ fontSize: 12, color: "#9C9C9C", margin: "6px 0 0" }}>Min investment: {formatNaira(plan.minAmount)}</p>
-                  <p style={{ fontSize: 12, color: "#9C9C9C", margin: "2px 0 0" }}>Duration: {plan.durationDays} days</p>
+          {(plans ?? []).map((plan) => {
+            const dailyIncome = (Number(plan.minAmount) * Number(plan.dailyRate)) / 100;
+            const totalIncome = dailyIncome * plan.durationDays;
+            return (
+              <Card key={plan.id} style={{ padding: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "#D4AF37", fontStyle: "italic" }}>{plan.name}</p>
+                    <p style={{ fontSize: 13, color: "#e8eaec", margin: "6px 0 0" }}>
+                      Deposit: <span style={{ color: "#e8eaec", fontWeight: 600 }}>{formatNaira(plan.minAmount)}</span>
+                    </p>
+                    <p style={{ fontSize: 13, color: "#9C9C9C", margin: "2px 0 0" }}>Duration: {plan.durationDays} days</p>
+                    <div style={{ display: "flex", gap: 20, marginTop: 10 }}>
+                      <div>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: "#D4AF37", margin: 0 }}>{formatNaira(dailyIncome)}</p>
+                        <p style={{ fontSize: 11, color: "#9C9C9C", margin: "2px 0 0" }}>Daily income</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: "#D4AF37", margin: 0 }}>{formatNaira(totalIncome)}</p>
+                        <p style={{ fontSize: 11, color: "#9C9C9C", margin: "2px 0 0" }}>Total income</p>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    style={{ marginLeft: 12, alignSelf: "center", background: "#22c55e", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, padding: "10px 20px" }}
+                    onClick={() => { setSelectedPlan(plan); setAmount(String(plan.minAmount)); }}
+                  >
+                    Invest
+                  </Button>
                 </div>
-                <p style={{ fontSize: 22, fontWeight: 700, color: "#D4AF37", margin: 0 }}>{Number(plan.dailyRate)}%<span style={{ fontSize: 11, fontWeight: 400, color: "#9C9C9C" }}>/day</span></p>
-              </div>
-              <Button
-                className="w-full mt-4"
-                onClick={() => { setSelectedPlan(plan); setAmount(String(plan.minAmount)); }}
-              >
-                Invest Now
-              </Button>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
           {!isLoading && (plans ?? []).length === 0 && (
             <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>No investment plans available right now.</p>
           )}
