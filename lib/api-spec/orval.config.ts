@@ -13,7 +13,7 @@ export default defineConfig({
     input: { target: "./openapi.yaml" },
     output: {
       target: "../api-client-react/src/generated/api.ts",
-      schemas: "../api-client-react/src/generated/api.schemas.ts",
+      schemas: "../api-client-react/src/generated/models",
       client: "react-query",
       mode: "single",
       httpClient: "fetch",
