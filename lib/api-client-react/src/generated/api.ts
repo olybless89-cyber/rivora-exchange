@@ -44,7 +44,7 @@ import type {
   User,
   UserInvestment,
   WithdrawalRequest
-} from './';
+} from './models';
 
 import { customFetch } from '../custom-fetch';
 import type { ErrorType , BodyType } from '../custom-fetch';
