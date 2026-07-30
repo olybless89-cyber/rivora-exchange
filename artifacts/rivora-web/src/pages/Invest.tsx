@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useGetMe, useListInvestmentPlans, useCreateInvestment, getListInvestmentsQueryKey, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -11,9 +11,19 @@ import { formatNaira } from "@/lib/utils";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { VipPlan, calculateVipReturns, formatNaira as formatVipNaira } from "@/lib/vipPlans";
 
+// Memoized plan mapper to prevent unnecessary recalculations
+const mapDbPlanToVipPlan = (p: any): VipPlan => ({
+  id: p.id,
+  name: p.name,
+  vipNumber: parseInt(p.name.replace(/[^0-9]/g, ""), 10) || 0,
+  principal: Number(p.minAmount),
+  dailyRate: Number(p.dailyRate),
+  durationDays: p.durationDays,
+});
+
 export default function InvestPage() {
   const { data: user } = useGetMe();
-  const { data: dbPlans, isLoading } = useListInvestmentPlans({ activeOnly: true });
+  const { data: dbPlans, isLoading, isError } = useListInvestmentPlans({ activeOnly: true });
   const createInvestment = useCreateInvestment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -24,31 +34,24 @@ export default function InvestPage() {
   const startX = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Map database plans to VipPlan format
-  const plans: VipPlan[] = (dbPlans ?? []).map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    vipNumber: parseInt(p.name.replace(/[^0-9]/g, ""), 10) || 0,
-    principal: Number(p.minAmount),
-    dailyRate: Number(p.dailyRate),
-    durationDays: p.durationDays,
-  }));
+  // Memoize plans mapping to prevent recalculation on every render
+  const plans = useMemo(() => (dbPlans ?? []).map(mapDbPlanToVipPlan), [dbPlans]);
 
   const totalSlides = plans.length;
 
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     setCurrentIndex(((index % totalSlides) + totalSlides) % totalSlides);
-  };
+  }, [totalSlides]);
 
-  const goNext = () => goToSlide(currentIndex + 1);
-  const goPrev = () => goToSlide(currentIndex - 1);
+  const goNext = useCallback(() => goToSlide(currentIndex + 1), [goToSlide, currentIndex]);
+  const goPrev = useCallback(() => goToSlide(currentIndex - 1), [goToSlide, currentIndex]);
 
   // Auto-slide every 4 seconds
   useEffect(() => {
     if (totalSlides <= 1) return;
     const interval = setInterval(goNext, 4000);
     return () => clearInterval(interval);
-  }, [currentIndex, totalSlides]);
+  }, [goNext, totalSlides]);
 
   // Touch swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -90,6 +93,11 @@ export default function InvestPage() {
     setAmount(String(plan.principal));
   };
 
+  // Reset current index when plans change
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [plans.length]);
+
   return (
     <AppLayout>
       <div style={{ padding: "20px 16px 40px" }}>
@@ -122,10 +130,36 @@ export default function InvestPage() {
           Available Balance: <span style={{ color: "#D4AF37", fontWeight: 700 }}>{formatNaira(user?.balance ?? 0)}</span>
         </p>
 
-        {isLoading && <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>Loading plans…</p>}
+        {/* ── Loading/Error/Empty States ───────────────────────── */}
+        {isLoading && (
+          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+            <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#D4AF37" }} />
+          </div>
+        )}
+
+        {isError && (
+          <div style={{
+            background: "rgba(220,38,38,0.1)",
+            border: "1px solid rgba(220,38,38,0.3)",
+            borderRadius: 12,
+            padding: 20,
+            textAlign: "center",
+            marginBottom: 16,
+          }}>
+            <p style={{ color: "#f87171", margin: 0 }}>Failed to load investment plans. Please try again.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              style={{ marginTop: 12 }}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
 
         {/* ── VIP Plans Carousel ─────────────────────────────────── */}
-        {!isLoading && plans.length > 0 && (
+        {!isLoading && !isError && plans.length > 0 && (
           <div style={{ marginBottom: 16 }} ref={containerRef}>
             {/* Carousel container */}
             <div
@@ -141,7 +175,7 @@ export default function InvestPage() {
                   gap: 32,
                 }}
               >
-                {plans.map((plan, index) => (
+                {plans.map((plan) => (
                   <div
                     key={plan.id}
                     style={{
@@ -242,7 +276,7 @@ export default function InvestPage() {
           </div>
         )}
 
-        {!isLoading && plans.length === 0 && (
+        {!isLoading && !isError && plans.length === 0 && (
           <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>No investment plans available right now.</p>
         )}
 
