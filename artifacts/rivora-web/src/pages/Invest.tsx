@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGetMe, useListInvestmentPlans, useCreateInvestment, getListInvestmentsQueryKey, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { VipPlanCard } from "@/components/VipPlanCard";
 import { useToast } from "@/hooks/use-toast";
 import { formatNaira } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { VipPlan, calculateVipReturns, formatNaira as formatVipNaira } from "@/lib/vipPlans";
 
 export default function InvestPage() {
@@ -20,6 +20,9 @@ export default function InvestPage() {
 
   const [selectedPlan, setSelectedPlan] = useState<VipPlan | null>(null);
   const [amount, setAmount] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const startX = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Map database plans to VipPlan format
   const plans: VipPlan[] = (dbPlans ?? []).map((p: any) => ({
@@ -30,6 +33,35 @@ export default function InvestPage() {
     dailyRate: Number(p.dailyRate),
     durationDays: p.durationDays,
   }));
+
+  const totalSlides = plans.length;
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(((index % totalSlides) + totalSlides) % totalSlides);
+  };
+
+  const goNext = () => goToSlide(currentIndex + 1);
+  const goPrev = () => goToSlide(currentIndex - 1);
+
+  // Auto-slide every 4 seconds
+  useEffect(() => {
+    if (totalSlides <= 1) return;
+    const interval = setInterval(goNext, 4000);
+    return () => clearInterval(interval);
+  }, [currentIndex, totalSlides]);
+
+  // Touch swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - startX.current;
+    if (Math.abs(deltaX) > 50) {
+      if (deltaX < 0) goNext();
+      else goPrev();
+    }
+  };
 
   const handleInvest = () => {
     if (!selectedPlan) return;
@@ -92,22 +124,121 @@ export default function InvestPage() {
 
         {isLoading && <p style={{ color: "#9C9C9C", textAlign: "center", padding: 24 }}>Loading plans…</p>}
 
-        {/* ── VIP Plans Grid ─────────────────────────────────────── */}
+        {/* ── VIP Plans Carousel ─────────────────────────────────── */}
         {!isLoading && plans.length > 0 && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: 20,
-            justifyItems: "center",
-            marginTop: 8,
-          }}>
-            {plans.map((plan) => (
-              <VipPlanCard
-                key={plan.id}
-                plan={plan}
-                onInvest={handleSelectPlan}
-              />
-            ))}
+          <div style={{ marginBottom: 16 }} ref={containerRef}>
+            {/* Carousel container */}
+            <div
+              style={{ overflow: "hidden", position: "relative" }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  transform: `translateX(calc(${currentIndex * -100}% - ${currentIndex * 32}px))`,
+                  transition: "transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)",
+                  gap: 32,
+                }}
+              >
+                {plans.map((plan, index) => (
+                  <div
+                    key={plan.id}
+                    style={{
+                      minWidth: "calc(100% - 32px)",
+                      padding: "0 16px",
+                      boxSizing: "border-box",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <VipPlanCard
+                      plan={plan}
+                      onInvest={handleSelectPlan}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation arrows */}
+            {totalSlides > 1 && (
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: 16,
+                padding: "0 8px",
+              }}>
+                <button
+                  onClick={goPrev}
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "50%",
+                    width: 40,
+                    height: 40,
+                    cursor: "pointer",
+                    color: "#D4AF37",
+                    fontSize: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ChevronLeft size={24} />
+                </button>
+
+                {/* Dots */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {plans.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSlide(index)}
+                      style={{
+                        width: index === currentIndex ? 24 : 8,
+                        height: 8,
+                        borderRadius: 4,
+                        border: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                        background: index === currentIndex ? "#D4AF37" : "rgba(255,255,255,0.2)",
+                        transition: "width 0.3s ease, background 0.3s ease",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={goNext}
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "50%",
+                    width: 40,
+                    height: 40,
+                    cursor: "pointer",
+                    color: "#D4AF37",
+                    fontSize: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </div>
+            )}
+
+            {/* Slide counter */}
+            <p style={{
+              textAlign: "center",
+              fontSize: 12,
+              color: "#9C9C9C",
+              marginTop: 10,
+            }}>
+              {currentIndex + 1} / {totalSlides}
+            </p>
           </div>
         )}
 
