@@ -151,3 +151,13 @@ export const withdrawalRequestsTable = pgTable("withdrawal_requests", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   reviewedAt: timestamp("reviewed_at"),
 });
+
+// ---------------------------------------------------------------------------
+// App settings (key-value store for platform-wide configuration)
+// ---------------------------------------------------------------------------
+
+export const appSettingsTable = pgTable("app_settings", {
+  key: varchar("key", { length: 100 }).primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
