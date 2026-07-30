@@ -164,7 +164,7 @@ function PlanFormDialog({
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <Label>Plan Name</Label>
-            <Input placeholder="e.g. VIP 3" value={form.name} onChange={set("name")} className="mt-2" />
+            <Input placeholder="e.g. VIP 1" value={form.name} onChange={set("name")} className="mt-2" />
           </div>
           <div>
             <Label>Minimum Amount (₦)</Label>
