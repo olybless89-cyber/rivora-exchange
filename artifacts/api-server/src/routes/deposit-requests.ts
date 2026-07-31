@@ -60,6 +60,88 @@ router.post("/deposit-requests", requireAuth, async (req, res): Promise<void> =>
   res.status(201).json(request);
 });
 
+// Instant deposit - auto-credits balance immediately (for the new deposit flow)
+router.post("/deposit-requests/instant", requireAuth, async (req, res): Promise<void> => {
+  const parsed = createDepositRequestBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: parsed.error.message });
+    return;
+  }
+
+  if (parsed.data.amount < MIN_DEPOSIT) {
+    res.status(400).json({ message: `Minimum deposit is ₦${MIN_DEPOSIT.toLocaleString()}` });
+    return;
+  }
+
+  const depositAmount = Number(parsed.data.amount);
+
+  const result = await db.transaction(async (tx) => {
+    // Create deposit request record
+    const [request] = await tx
+      .insert(depositRequestsTable)
+      .values({
+        id: crypto.randomUUID(),
+        userId: req.user!.id,
+        amount: String(depositAmount),
+        paymentMethod: parsed.data.paymentMethod,
+        proofUrl: parsed.data.proofUrl ?? null,
+        status: "approved", // Auto-approve
+        reviewedAt: new Date(),
+      })
+      .returning();
+
+    // Get user and update balance
+    const [user] = await tx.select().from(usersTable).where(eq(usersTable.id, req.user!.id));
+    if (!user) throw new Error("User not found");
+
+    let newBalance = Number(user.balance) + depositAmount;
+
+    // Record deposit transaction
+    await tx.insert(transactionsTable).values({
+      id: crypto.randomUUID(),
+      userId: user.id,
+      type: "deposit",
+      amount: String(depositAmount),
+      status: "completed",
+      reference: generateReference(),
+      description: `Deposit via ${parsed.data.paymentMethod}`,
+    });
+
+    // Credit welcome bonus for first deposit
+    const shouldCreditWelcomeBonus = !user.hasReceivedWelcomeBonus;
+    if (shouldCreditWelcomeBonus) {
+      newBalance += WELCOME_BONUS;
+      await tx.insert(transactionsTable).values({
+        id: crypto.randomUUID(),
+        userId: user.id,
+        type: "bonus",
+        amount: String(WELCOME_BONUS),
+        status: "completed",
+        reference: generateReference(),
+        description: "Welcome bonus (first deposit)",
+      });
+    }
+
+    // Update user balance and mark welcome bonus as received
+    await tx
+      .update(usersTable)
+      .set({
+        balance: String(newBalance),
+        hasReceivedWelcomeBonus: shouldCreditWelcomeBonus ? true : user.hasReceivedWelcomeBonus,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.id, user.id));
+
+    return {
+      request,
+      newBalance,
+      bonusCredited: shouldCreditWelcomeBonus ? WELCOME_BONUS : 0,
+    };
+  });
+
+  res.status(201).json(result);
+});
+
 router.patch("/deposit-requests/:requestId", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const requestId = Array.isArray(req.params.requestId) ? req.params.requestId[0] : req.params.requestId;
 
