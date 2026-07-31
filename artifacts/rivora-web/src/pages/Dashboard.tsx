@@ -93,7 +93,7 @@ export default function DashboardPage() {
           </div>
           
           <p style={{ fontSize: 11, color: "#9C9C9C", margin: "10px 0 0", textAlign: "center" }}>
-            Earn 20% referral bonus when your team deposits!
+            Earn 10% referral bonus when your team deposits!
           </p>
         </Card>
 

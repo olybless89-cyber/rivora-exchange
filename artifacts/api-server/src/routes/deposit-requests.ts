@@ -13,7 +13,7 @@ const WELCOME_BONUS = 2_000;
 // on EVERY approved deposit (not just their first) -- Level 1 is whoever
 // directly referred this user, Level 2 is that person's referrer, Level 3
 // is theirs. Index 0 = Level 1.
-const REFERRAL_LEVEL_RATES = [0.20, 0.02, 0.02];
+const REFERRAL_LEVEL_RATES = [0.10, 0.02, 0.02];
 
 const router: IRouter = Router();
 
