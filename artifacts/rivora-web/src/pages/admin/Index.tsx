@@ -19,25 +19,29 @@ export default function AdminDashboardPage() {
     <AdminLayout title="Dashboard">
       {/* Stats Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
-        <Card style={{ padding: 16, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.3)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Users size={24} color="#D4AF37" />
-            <div>
-              <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0 }}>Total Users</p>
-              <p style={{ fontSize: 24, fontWeight: 800, color: "#D4AF37", margin: 0 }}>{users?.length ?? 0}</p>
+        <Link to="/admin/users" style={{ textDecoration: "none" }}>
+          <Card style={{ padding: 16, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.3)", cursor: "pointer" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Users size={24} color="#D4AF37" />
+              <div>
+                <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0 }}>Total Users</p>
+                <p style={{ fontSize: 24, fontWeight: 800, color: "#D4AF37", margin: 0 }}>{users?.length ?? 0}</p>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card style={{ padding: 16, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Wallet size={24} color="#22c55e" />
-            <div>
-              <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0 }}>Total Balance</p>
-              <p style={{ fontSize: 20, fontWeight: 800, color: "#22c55e", margin: 0 }}>{formatNaira(totalUserBalance)}</p>
+        <Link to="/admin/transactions" style={{ textDecoration: "none" }}>
+          <Card style={{ padding: 16, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", cursor: "pointer" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Wallet size={24} color="#22c55e" />
+              <div>
+                <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0 }}>Total Balance</p>
+                <p style={{ fontSize: 20, fontWeight: 800, color: "#22c55e", margin: 0 }}>{formatNaira(totalUserBalance)}</p>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
 
         <Link to="/admin/deposits" style={{ textDecoration: "none" }}>
           <Card style={{ padding: 16, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.3)", cursor: "pointer" }}>
