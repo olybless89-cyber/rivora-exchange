@@ -1,7 +1,7 @@
 import { useListUsers, useListDepositRequests, useListWithdrawalRequests } from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { Users, Wallet, TrendingUp, ArrowDownCircle, ArrowUpCircle, Settings, BarChart3 } from "lucide-react";
 import { formatNaira } from "@/lib/utils";
 
