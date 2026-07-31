@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListUsers, useUpdateUser, getListUsersQueryKey } from "@workspace/api-client-react";
+import { useListUsers, useUpdateUser, useListInvestments, getListUsersQueryKey, getListInvestmentsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card } from "@/components/ui/card";
@@ -10,11 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatNaira } from "@/lib/utils";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, ChevronRight, TrendingUp, Wallet, Calendar } from "lucide-react";
+import { format } from "date-fns";
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [viewingUser, setViewingUser] = useState<any>(null);
   const [editingUser, setEditingUser] = useState<any>(null);
 
   const { data: users, isLoading } = useListUsers({
@@ -47,7 +49,7 @@ export default function AdminUsersPage() {
         {(users ?? []).map((u) => (
           <Card key={u.id} style={{ padding: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-              <div>
+              <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 14, fontWeight: 600, margin: 0, color: "#fff" }}>
                   {u.fullName}
                   {u.role === "admin" && (
@@ -60,7 +62,12 @@ export default function AdminUsersPage() {
                   <span style={{ color: u.status === "active" ? "#D4AF37" : "#C0392B" }}>{u.status}</span>
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => setEditingUser(u)}>Edit</Button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button size="sm" variant="outline" onClick={() => setViewingUser(u)}>
+                  View <ChevronRight size={14} />
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setEditingUser(u)}>Edit</Button>
+              </div>
             </div>
           </Card>
         ))}
@@ -69,8 +76,93 @@ export default function AdminUsersPage() {
         )}
       </div>
 
+      <ViewUserDialog user={viewingUser} onOpenChange={(open) => !open && setViewingUser(null)} />
       <EditUserDialog user={editingUser} onOpenChange={(open) => !open && setEditingUser(null)} />
     </AdminLayout>
+  );
+}
+
+function ViewUserDialog({ user, onOpenChange }: { user: any; onOpenChange: (open: boolean) => void }) {
+  const { data: investments, isLoading: loadingInvestments } = useListInvestments(
+    user ? { userId: user.id } : undefined
+  );
+
+  // Calculate total earnings from investments
+  const totalInvested = investments?.reduce((sum, inv) => sum + Number(inv.amount), 0) ?? 0;
+  const totalDailyRate = investments?.reduce((sum, inv) => sum + (Number(inv.amount) * Number(inv.dailyRate) / 100), 0) ?? 0;
+
+  return (
+    <Dialog
+      open={!!user}
+      onOpenChange={(open) => {
+        if (!open) onOpenChange(false);
+      }}
+    >
+      <DialogContent style={{ maxWidth: 500 }}>
+        <DialogHeader>
+          <DialogTitle>{user?.fullName}</DialogTitle>
+          <p style={{ fontSize: 12, color: "#9C9C9C", margin: "4px 0 0" }}>{user?.phone}</p>
+        </DialogHeader>
+        
+        {/* User Summary */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          <Card style={{ padding: 12, background: "rgba(212,175,55,0.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <Wallet size={16} color="#D4AF37" />
+              <span style={{ fontSize: 11, color: "#9C9C9C" }}>Balance</span>
+            </div>
+            <p style={{ fontSize: 18, fontWeight: 800, color: "#D4AF37", margin: 0 }}>{formatNaira(user?.balance)}</p>
+          </Card>
+          <Card style={{ padding: 12, background: "rgba(34,197,94,0.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <TrendingUp size={16} color="#22c55e" />
+              <span style={{ fontSize: 11, color: "#9C9C9C" }}>Daily Earning</span>
+            </div>
+            <p style={{ fontSize: 18, fontWeight: 800, color: "#22c55e", margin: 0 }}>{formatNaira(totalDailyRate)}</p>
+          </Card>
+        </div>
+
+        {/* Investments */}
+        <div>
+          <h4 style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>📊 Investments</h4>
+          {loadingInvestments ? (
+            <p style={{ color: "#9C9C9C", fontSize: 12 }}>Loading...</p>
+          ) : investments && investments.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 300, overflowY: "auto" }}>
+              {investments.map((inv) => (
+                <Card key={inv.id} style={{ padding: 12, background: "rgba(0,0,0,0.2)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "#D4AF37", margin: 0 }}>{inv.planName}</p>
+                      <p style={{ fontSize: 11, color: "#9C9C9C", margin: "2px 0 0" }}>
+                        <Calendar size={10} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                        {format(new Date(inv.startDate), "MMM d, yyyy")} - {format(new Date(inv.endDate), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: 0 }}>{formatNaira(inv.amount)}</p>
+                      <p style={{ fontSize: 10, color: "#22c55e", margin: "2px 0 0" }}>+{Number(inv.dailyRate)}%/day</p>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                    <span style={{ fontSize: 11, color: "#9C9C9C" }}>Status</span>
+                    <span style={{ fontSize: 11, color: inv.status === "active" ? "#22c55e" : "#9C9C9C", fontWeight: 600 }}>
+                      {inv.status.toUpperCase()}
+                    </span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: "#9C9C9C", fontSize: 12, textAlign: "center", padding: 12 }}>No investments yet</p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
