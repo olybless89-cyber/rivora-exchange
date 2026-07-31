@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetMe, useCreateDepositRequest } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
@@ -8,10 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatNaira } from "@/lib/utils";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Building2, Copy, CheckCheck } from "lucide-react";
 
+const API = import.meta.env.VITE_API_URL as string;
 const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
+
+async function getSetting(key: string): Promise<string> {
+  const token = localStorage.getItem("rivora_token");
+  const r = await fetch(`${API}/api/settings/${key}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  return (await r.json()).value ?? "";
+}
 
 export default function DepositPage() {
   const { data: user } = useGetMe();
@@ -21,8 +28,26 @@ export default function DepositPage() {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("Bank Transfer");
   const [submitted, setSubmitted] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  // Platform payment details
+  const [platformBankName, setPlatformBankName] = useState("");
+  const [platformAccountNumber, setPlatformAccountNumber] = useState("");
+  const [platformAccountName, setPlatformAccountName] = useState("");
 
   const isFirstDeposit = user && !user.hasReceivedWelcomeBonus;
+
+  useEffect(() => {
+    getSetting("platform_bank_name").then(setPlatformBankName);
+    getSetting("platform_bank_account_number").then(setPlatformAccountNumber);
+    getSetting("platform_bank_account_name").then(setPlatformAccountName);
+  }, []);
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   const handleSubmit = () => {
     const numAmount = Number(amount);
@@ -68,6 +93,57 @@ export default function DepositPage() {
             <p style={{ fontSize: 13, color: "#D4AF37", margin: 0, fontWeight: 600 }}>
               🎁 Get a {formatNaira(WELCOME_BONUS)} welcome bonus on your first deposit!
             </p>
+          </Card>
+        )}
+
+        {/* Platform Payment Details */}
+        {(platformBankName || platformAccountNumber || platformAccountName) && (
+          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(13,32,68,0.5)", border: "1px solid rgba(212,175,55,0.3)" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#D4AF37", margin: "0 0 12px" }}>💳 Transfer To:</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {platformBankName && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Bank</p>
+                    <p style={{ fontSize: 13, color: "#fff", margin: "2px 0 0", fontWeight: 600 }}>{platformBankName}</p>
+                  </div>
+                  <button 
+                    onClick={() => copyToClipboard(platformBankName, "bank")}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#9C9C9C", padding: 4 }}
+                  >
+                    {copied === "bank" ? <CheckCheck size={16} color="#22c55e" /> : <Copy size={16} />}
+                  </button>
+                </div>
+              )}
+              {platformAccountNumber && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Account Number</p>
+                    <p style={{ fontSize: 18, color: "#D4AF37", margin: "2px 0 0", fontWeight: 800, letterSpacing: "0.1em" }}>{platformAccountNumber}</p>
+                  </div>
+                  <button 
+                    onClick={() => copyToClipboard(platformAccountNumber, "account")}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#9C9C9C", padding: 4 }}
+                  >
+                    {copied === "account" ? <CheckCheck size={16} color="#22c55e" /> : <Copy size={16} />}
+                  </button>
+                </div>
+              )}
+              {platformAccountName && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Account Name</p>
+                    <p style={{ fontSize: 13, color: "#fff", margin: "2px 0 0", fontWeight: 600 }}>{platformAccountName}</p>
+                  </div>
+                  <button 
+                    onClick={() => copyToClipboard(platformAccountName, "name")}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#9C9C9C", padding: 4 }}
+                  >
+                    {copied === "name" ? <CheckCheck size={16} color="#22c55e" /> : <Copy size={16} />}
+                  </button>
+                </div>
+              )}
+            </div>
           </Card>
         )}
 

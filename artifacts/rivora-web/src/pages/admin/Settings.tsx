@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Send, Users } from "lucide-react";
+import { Loader2, Save, Send, Users, Building2, CreditCard, User } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL as string;
 
@@ -29,10 +29,28 @@ async function sendEmail(endpoint: string, payload: object): Promise<{ sent: num
 export default function AdminSettingsPage() {
   const { toast } = useToast();
   const [waUrl, setWaUrl] = useState(""); const [waLoading, setWaLoading] = useState(true); const [waSaving, setWaSaving] = useState(false);
+
+  // Payment account settings
+  const [bankName, setBankName] = useState(""); const [bankLoading, setBankLoading] = useState(true); const [bankSaving, setBankSaving] = useState(false);
+  const [accountNumber, setAccountNumber] = useState(""); const [accountLoading, setAccountLoading] = useState(true); const [accountSaving, setAccountSaving] = useState(false);
+  const [accountName, setAccountName] = useState(""); const [nameLoading, setNameLoading] = useState(true); const [nameSaving, setNameSaving] = useState(false);
+
   const [singleUserId, setSingleUserId] = useState(""); const [singleSubject, setSingleSubject] = useState(""); const [singleMessage, setSingleMessage] = useState(""); const [singleSending, setSingleSending] = useState(false);
   const [bulkSubject, setBulkSubject] = useState(""); const [bulkMessage, setBulkMessage] = useState(""); const [bulkSending, setBulkSending] = useState(false);
+
+  // Load WhatsApp URL
   useEffect(() => { getSetting("whatsapp_url").then(setWaUrl).finally(() => setWaLoading(false)); }, []);
   const saveWaUrl = async () => { setWaSaving(true); try { await putSetting("whatsapp_url", waUrl.trim()); toast({ title: "Saved", description: "WhatsApp group link updated." }); } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); } finally { setWaSaving(false); } };
+
+  // Load payment account settings
+  useEffect(() => { getSetting("platform_bank_name").then(setBankName).finally(() => setBankLoading(false)); }, []);
+  useEffect(() => { getSetting("platform_bank_account_number").then(setAccountNumber).finally(() => setAccountLoading(false)); }, []);
+  useEffect(() => { getSetting("platform_bank_account_name").then(setAccountName).finally(() => setNameLoading(false)); }, []);
+
+  const saveBankName = async () => { setBankSaving(true); try { await putSetting("platform_bank_name", bankName.trim()); toast({ title: "Saved", description: "Bank name updated." }); } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); } finally { setBankSaving(false); } };
+  const saveAccountNumber = async () => { setAccountSaving(true); try { await putSetting("platform_bank_account_number", accountNumber.trim()); toast({ title: "Saved", description: "Account number updated." }); } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); } finally { setAccountSaving(false); } };
+  const saveAccountName = async () => { setNameSaving(true); try { await putSetting("platform_bank_account_name", accountName.trim()); toast({ title: "Saved", description: "Account name updated." }); } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); } finally { setNameSaving(false); } };
+
   const handleSingleEmail = async () => {
     if (!singleUserId.trim() || !singleSubject.trim() || !singleMessage.trim()) { toast({ title: "Missing fields", description: "Fill in User ID, subject, and message.", variant: "destructive" }); return; }
     setSingleSending(true);
@@ -49,6 +67,68 @@ export default function AdminSettingsPage() {
   return (
     <AdminLayout title="Settings">
       <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 600 }}>
+        {/* Payment Account Settings */}
+        <Card style={{ padding: 20 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>💳 Platform Payment Account</h2>
+          <p style={{ fontSize: 12, color: "#9C9C9C", margin: "0 0 16px" }}>Bank details shown to users when they want to deposit money.</p>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <Label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Building2 size={14} /> Bank Name
+              </Label>
+              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                <Input 
+                  placeholder="e.g. First Bank, Access Bank" 
+                  value={bankLoading ? "Loading…" : bankName} 
+                  onChange={(e) => setBankName(e.target.value)} 
+                  disabled={bankLoading}
+                  style={{ flex: 1 }}
+                />
+                <Button onClick={saveBankName} disabled={bankSaving || bankLoading} style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
+                  {bankSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <CreditCard size={14} /> Account Number
+              </Label>
+              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                <Input 
+                  placeholder="e.g. 3084567890" 
+                  value={accountLoading ? "Loading…" : accountNumber} 
+                  onChange={(e) => setAccountNumber(e.target.value)} 
+                  disabled={accountLoading}
+                  style={{ flex: 1 }}
+                />
+                <Button onClick={saveAccountNumber} disabled={accountSaving || accountLoading} style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
+                  {accountSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <User size={14} /> Account Name
+              </Label>
+              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                <Input 
+                  placeholder="e.g. RIVORA INVESTMENT LIMITED" 
+                  value={nameLoading ? "Loading…" : accountName} 
+                  onChange={(e) => setAccountName(e.target.value)} 
+                  disabled={nameLoading}
+                  style={{ flex: 1 }}
+                />
+                <Button onClick={saveAccountName} disabled={nameSaving || nameLoading} style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
+                  {nameSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
         <Card style={{ padding: 20 }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>📱 WhatsApp Group Link</h2>
           <p style={{ fontSize: 12, color: "#9C9C9C", margin: "0 0 16px" }}>Shown as a green button on the welcome splash screen.</p>
