@@ -61,7 +61,7 @@ export default function DepositPage() {
 
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
-  
+  const isFirstDeposit = user && !user.hasReceivedWelcomeBonus;
 
   // Load platform payment details
   useEffect(() => {
