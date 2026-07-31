@@ -20,6 +20,7 @@ import AdminWithdrawalsPage from "@/pages/admin/Withdrawals";
 import AdminPlansPage from "@/pages/admin/Plans";
 import AdminTransactionsPage from "@/pages/admin/Transactions";
 import AdminSettingsPage from "@/pages/admin/Settings";
+import AdminDashboardPage from "@/pages/admin/Index";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/withdraw" component={WithdrawPage} />
       <Route path="/history" component={HistoryPage} />
       <Route path="/profile" component={ProfilePage} />
+      <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/admin/users" component={AdminUsersPage} />
       <Route path="/admin/deposits" component={AdminDepositsPage} />
       <Route path="/admin/withdrawals" component={AdminWithdrawalsPage} />
