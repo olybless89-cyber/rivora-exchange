@@ -1583,3 +1583,42 @@ export function useListTransactions<TData = Awaited<ReturnType<typeof listTransa
 
   return query;
 }
+
+// Referral team endpoint
+export const getListMyReferralsUrl = () => {
+  return `/users/me/referrals`
+}
+
+export const listMyReferrals = async ( options?: RequestInit): Promise<User[]> => {
+  return customFetch<User[]>(getListMyReferralsUrl(),
+  {
+    ...options,
+    method: 'GET'
+  }
+);}
+
+export const getListMyReferralsQueryKey = () => {
+    return [
+    `/users/me/referrals`
+    ] as const;
+    }
+
+export const getListMyReferralsQueryOptions = <TData = Awaited<ReturnType<typeof listMyReferrals>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+  const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey =  queryOptions?.queryKey ?? getListMyReferralsQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyReferrals>>> = ({ signal }) => listMyReferrals({ signal, ...requestOptions });
+  return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyReferrals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyReferralsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyReferrals>>>
+export type ListMyReferralsQueryError = ErrorType<unknown>
+
+export function useListMyReferrals<TData = Awaited<ReturnType<typeof listMyReferrals>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyReferralsQueryOptions(options)
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  query.queryKey = queryOptions.queryKey ;
+  return query;
+}

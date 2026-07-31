@@ -29,6 +29,17 @@ router.patch("/users/me/bank", requireAuth, async (req, res): Promise<void> => {
   res.json(toPublicUser(updated));
 });
 
+// Get my referral team (direct referrals)
+router.get("/users/me/referrals", requireAuth, async (req, res): Promise<void> => {
+  const referrals = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.referredBy, req.user!.id))
+    .orderBy(usersTable.createdAt);
+
+  res.json(referrals.map(toPublicUser));
+});
+
 router.get("/users", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const { search, status, role } = req.query as Record<string, string | undefined>;
 

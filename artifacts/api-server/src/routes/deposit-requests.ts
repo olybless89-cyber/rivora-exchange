@@ -122,6 +122,40 @@ router.post("/deposit-requests/instant", requireAuth, async (req, res): Promise<
       });
     }
 
+    // Credit referral bonuses to referrers (3-level system)
+    let ancestorId: string | null = user.referredBy;
+    let totalReferralBonus = 0;
+    for (let level = 0; level < REFERRAL_LEVEL_RATES.length && ancestorId; level++) {
+      const [ancestor] = await tx.select().from(usersTable).where(eq(usersTable.id, ancestorId));
+      if (!ancestor) break;
+
+      const rate = REFERRAL_LEVEL_RATES[level];
+      const commission = Math.round(depositAmount * rate * 100) / 100;
+
+      if (commission > 0) {
+        totalReferralBonus += commission;
+        await tx.insert(transactionsTable).values({
+          id: crypto.randomUUID(),
+          userId: ancestor.id,
+          type: "referral_bonus",
+          amount: String(commission),
+          status: "completed",
+          reference: generateReference(),
+          description: `Level ${level + 1} referral commission from ${user.fullName}'s deposit`,
+        });
+
+        await tx
+          .update(usersTable)
+          .set({
+            balance: String(Number(ancestor.balance) + commission),
+            updatedAt: new Date(),
+          })
+          .where(eq(usersTable.id, ancestor.id));
+      }
+
+      ancestorId = ancestor.referredBy;
+    }
+
     // Update user balance and mark welcome bonus as received
     await tx
       .update(usersTable)
@@ -136,6 +170,7 @@ router.post("/deposit-requests/instant", requireAuth, async (req, res): Promise<
       request,
       newBalance,
       bonusCredited: shouldCreditWelcomeBonus ? WELCOME_BONUS : 0,
+      referralBonusCredited: totalReferralBonus,
     };
   });
 

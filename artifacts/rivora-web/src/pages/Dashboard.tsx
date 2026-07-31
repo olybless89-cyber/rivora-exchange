@@ -1,12 +1,13 @@
 import { Link } from "wouter";
-import { useGetMe, useListInvestmentPlans, useListTransactions, getListTransactionsQueryKey } from "@workspace/api-client-react";
+import { useGetMe, useListInvestmentPlans, useListTransactions, useListMyReferrals, getListTransactionsQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
 import { PlanCarousel } from "@/components/PlanCarousel";
 import { formatNaira, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon, Users, Copy, CheckCheck } from "lucide-react";
 import { format } from "date-fns";
+import { useState } from "react";
 
 const TYPE_LABEL: Record<string, string> = {
   deposit: "Deposit",
@@ -19,13 +20,25 @@ const TYPE_LABEL: Record<string, string> = {
 export default function DashboardPage() {
   const { data: user } = useGetMe();
   const { data: plans } = useListInvestmentPlans({ activeOnly: true });
+  const { data: referrals } = useListMyReferrals();
   const transactionsParams = user ? { userId: user.id } : undefined;
   const { data: transactions } = useListTransactions(transactionsParams, {
     query: { enabled: !!user, queryKey: getListTransactionsQueryKey(transactionsParams) },
   });
   const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
 
   const recent = (transactions ?? []).slice(0, 5);
+  const teamCount = referrals?.length ?? 0;
+
+  const copyReferralCode = () => {
+    if (user?.referralCode) {
+      navigator.clipboard.writeText(user.referralCode);
+      setCopied(true);
+      toast({ title: "Copied!", description: "Referral code copied to clipboard" });
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <AppLayout>
@@ -40,6 +53,49 @@ export default function DashboardPage() {
           <p style={{ color: "#9C9C9C", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>Total Balance</p>
           <p className="tabular-nums" style={{ fontSize: 32, fontWeight: 700, margin: "8px 0 0", color: "#fff" }}>{formatNaira(user?.balance ?? 0)}</p>
         </div>
+
+        {/* Referral Team Section */}
+        <Card style={{ padding: 16, marginBottom: 24, background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.15)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Users size={20} color="#D4AF37" />
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>My Referral Team</span>
+              <span style={{ 
+                background: "#D4AF37", color: "#000", fontSize: 11, fontWeight: 700, 
+                padding: "2px 8px", borderRadius: 12 
+              }}>Team ({teamCount})</span>
+            </div>
+          </div>
+          
+          <div style={{ 
+            background: "#0a0a0a", borderRadius: 8, padding: 12, 
+            display: "flex", alignItems: "center", justifyContent: "space-between"
+          }}>
+            <div>
+              <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Your Referral Code</p>
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#D4AF37", margin: "4px 0 0", letterSpacing: 2 }}>
+                {user?.referralCode || "------"}
+              </p>
+            </div>
+            <button
+              onClick={copyReferralCode}
+              style={{
+                background: copied ? "#22c55e" : "#D4AF37",
+                border: "none", borderRadius: 8, padding: "10px 14px",
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+              }}
+            >
+              {copied ? <CheckCheck size={18} color="#fff" /> : <Copy size={18} color="#000" />}
+              <span style={{ fontSize: 12, fontWeight: 600, color: copied ? "#fff" : "#000" }}>
+                {copied ? "Copied!" : "Copy"}
+              </span>
+            </button>
+          </div>
+          
+          <p style={{ fontSize: 11, color: "#9C9C9C", margin: "10px 0 0", textAlign: "center" }}>
+            Earn 20% referral bonus when your team deposits!
+          </p>
+        </Card>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 28 }}>
           <QuickAction href="/deposit" icon={ArrowDownToLine} label="Deposit" />
