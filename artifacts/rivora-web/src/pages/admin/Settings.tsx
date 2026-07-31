@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Send, Users, Building2, CreditCard, User } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL as string;
+const API = import.meta.env.VITE_API_BASE_URL as string;
 
 async function getSetting(key: string): Promise<string> {
   const token = localStorage.getItem("rivora_token");

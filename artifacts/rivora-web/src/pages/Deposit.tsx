@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatNaira } from "@/lib/utils";
 import { CheckCircle2, Loader2, Copy, CheckCheck, Clock, AlertCircle } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL as string;
+const API = import.meta.env.VITE_API_BASE_URL as string;
 const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
 const COUNTDOWN_MINUTES = 10;
