@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { db, investmentPlansTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 // VIP Investment Plans — VIP 1 to VIP 9, 10%/day, 90 days
 export const PLAN_SEED_DATA = [
@@ -14,19 +15,27 @@ export const PLAN_SEED_DATA = [
   { name: "VIP 9", minAmount: 2_000_000, dailyRate: 10, durationDays: 90 },
 ];
 
-// ALWAYS wipe and re-insert on every deploy — guarantees DB matches code exactly.
+// Insert plans that don't exist (preserves existing plans with user investments)
 export async function seedInvestmentPlansIfEmpty(): Promise<void> {
-  await db.delete(investmentPlansTable);
-  console.log("Plans wiped — inserting VIP 1–VIP 9 (10%/day, 90 days)");
   for (const plan of PLAN_SEED_DATA) {
-    await db.insert(investmentPlansTable).values({
-      id: crypto.randomUUID(),
-      name: plan.name,
-      dailyRate: String(plan.dailyRate),
-      minAmount: String(plan.minAmount),
-      durationDays: plan.durationDays,
-      isActive: true,
-    });
+    const [existing] = await db
+      .select()
+      .from(investmentPlansTable)
+      .where(eq(investmentPlansTable.name, plan.name));
+
+    if (!existing) {
+      await db.insert(investmentPlansTable).values({
+        id: crypto.randomUUID(),
+        name: plan.name,
+        dailyRate: String(plan.dailyRate),
+        minAmount: String(plan.minAmount),
+        durationDays: plan.durationDays,
+        isActive: true,
+      });
+      console.log(`✅ Inserted ${plan.name}`);
+    } else {
+      console.log(`⏭️  ${plan.name} already exists, skipping`);
+    }
   }
-  console.log("✅ VIP 1–VIP 9 seeded successfully");
+  console.log("✅ VIP 1–VIP 9 seeding complete");
 }
