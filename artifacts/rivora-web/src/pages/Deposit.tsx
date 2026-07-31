@@ -21,9 +21,9 @@ async function getSetting(key: string): Promise<string> {
   return (await r.json()).value ?? "";
 }
 
-async function instantDeposit(amount: number, paymentMethod: string): Promise<{ newBalance: number; bonusCredited: number }> {
+async function submitDepositRequest(amount: number, paymentMethod: string): Promise<{ id: string; status: string }> {
   const token = localStorage.getItem("rivora_token");
-  const r = await fetch(`${API}/api/deposit-requests/instant`, {
+  const r = await fetch(`${API}/api/deposit-requests`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -33,7 +33,7 @@ async function instantDeposit(amount: number, paymentMethod: string): Promise<{ 
   });
   if (!r.ok) {
     const err = await r.json();
-    throw new Error(err.message || "Deposit failed");
+    throw new Error(err.message || "Deposit request failed");
   }
   return r.json();
 }
@@ -61,7 +61,7 @@ export default function DepositPage() {
 
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isFirstDeposit = user && !user.hasReceivedWelcomeBonus;
+  
 
   // Load platform payment details
   useEffect(() => {
@@ -122,21 +122,23 @@ export default function DepositPage() {
     setIsProcessing(true);
     
     try {
-      const result = await instantDeposit(numAmount, `Bank Transfer - ${depositorName}`);
-      
-      // Refresh user data
-      queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      await submitDepositRequest(numAmount, `Bank Transfer - ${depositorName}`);
       
       setPaymentMade(true);
+      toast({ 
+        title: "Deposit Submitted!", 
+        description: "Your deposit is now PENDING. An admin will verify and approve shortly.", 
+        duration: 5000 
+      });
       
+      // Reset form
+      setAmount("");
+      setDepositorName("");
+      setCountdown(0);
+      setCountdownStarted(false);
+    } catch (err: any) {
       // Clear countdown
       if (countdownRef.current) clearTimeout(countdownRef.current);
-      
-      toast({
-        title: "Payment Confirmed! 💰",
-        description: `${formatNaira(numAmount)} ${result.bonusCredited > 0 ? `+ ${formatNaira(result.bonusCredited)} bonus` : ""} has been added to your balance!`,
-      });
-    } catch (err: any) {
       toast({ title: "Error", description: err.message || "Deposit failed", variant: "destructive" });
     } finally {
       setIsProcessing(false);
@@ -152,31 +154,27 @@ export default function DepositPage() {
     if (countdownRef.current) clearTimeout(countdownRef.current);
   };
 
-  // Payment successful screen
+  // Payment submitted - pending approval screen
   if (paymentMade) {
     return (
       <AppLayout>
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
-          <CheckCircle2 size={64} color="#22c55e" style={{ marginBottom: 16 }} />
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: "0 0 12px", color: "#22c55e" }}>
-            Payment Confirmed!
+          <Clock size={64} color="#D4AF37" style={{ marginBottom: 16 }} />
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: "0 0 12px", color: "#D4AF37" }}>
+            Deposit Submitted!
           </h1>
           <p style={{ color: "#e8eaec", fontSize: 15, marginBottom: 8 }}>
-            {formatNaira(amount)} has been credited to your account!
+            Your deposit of {formatNaira(amount)} is now <strong>PENDING</strong>.
           </p>
-          {isFirstDeposit && (
-            <Card style={{ padding: 16, margin: "16px auto", maxWidth: 300, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
-              <p style={{ color: "#22c55e", fontSize: 14, fontWeight: 600, margin: 0 }}>
-                🎁 +{formatNaira(WELCOME_BONUS)} Welcome Bonus Added!
-              </p>
-            </Card>
-          )}
+          <p style={{ color: "#9C9C9C", fontSize: 13, marginBottom: 16 }}>
+            An admin will verify and approve shortly.
+          </p>
           <Card style={{ padding: 16, margin: "20px auto", maxWidth: 350, background: "rgba(13,32,68,0.5)", border: "1px solid rgba(212,175,55,0.3)" }}>
-            <h4 style={{ fontSize: 13, color: "#D4AF37", margin: "0 0 8px" }}>Transaction Details</h4>
+            <h4 style={{ fontSize: 13, color: "#D4AF37", margin: "0 0 8px" }}>Deposit Details</h4>
             <div style={{ textAlign: "left", fontSize: 12, color: "#9C9C9C" }}>
               <p style={{ margin: "4px 0" }}>Amount: <span style={{ color: "#fff" }}>{formatNaira(amount)}</span></p>
               <p style={{ margin: "4px 0" }}>Depositor: <span style={{ color: "#fff" }}>{depositorName}</span></p>
-              <p style={{ margin: "4px 0" }}>Status: <span style={{ color: "#22c55e", fontWeight: 600 }}>CREDITED</span></p>
+              <p style={{ margin: "4px 0" }}>Status: <span style={{ color: "#D4AF37", fontWeight: 600 }}>PENDING</span></p>
             </div>
           </Card>
           <Button onClick={handleReset} className="w-full" style={{ maxWidth: 300, marginTop: 16 }}>
