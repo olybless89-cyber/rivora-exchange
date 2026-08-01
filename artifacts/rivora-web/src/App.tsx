@@ -12,6 +12,7 @@ import DepositPage from "@/pages/Deposit";
 import WithdrawPage from "@/pages/Withdraw";
 import HistoryPage from "@/pages/History";
 import ProfilePage from "@/pages/Profile";
+import PaymentCallbackPage from "@/pages/PaymentCallback";
 import NotFoundPage from "@/pages/NotFound";
 
 import AdminUsersPage from "@/pages/admin/Users";
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/withdraw" component={WithdrawPage} />
       <Route path="/history" component={HistoryPage} />
       <Route path="/profile" component={ProfilePage} />
+      <Route path="/payment-callback" component={PaymentCallbackPage} />
       <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/admin/users" component={AdminUsersPage} />
       <Route path="/admin/deposits" component={AdminDepositsPage} />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -8,176 +8,241 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { formatNaira } from "@/lib/utils";
-import { CheckCircle2, Loader2, Copy, CheckCheck, Clock, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  CreditCard,
+  Landmark,
+  Smartphone,
+  Zap,
+} from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE_URL as string;
+const FLW_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY as string;
 const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
-const COUNTDOWN_MINUTES = 10;
 
-async function getSetting(key: string): Promise<string> {
-  const token = localStorage.getItem("rivora_token");
-  const r = await fetch(`${API}/api/settings/${key}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-  return (await r.json()).value ?? "";
+const CURRENCIES = [
+  { value: "NGN", label: "NGN — Nigerian Naira (₦)" },
+  { value: "USD", label: "USD — US Dollar ($)" },
+  { value: "GHS", label: "GHS — Ghanaian Cedi (₵)" },
+  { value: "KES", label: "KES — Kenyan Shilling (KSh)" },
+  { value: "ZAR", label: "ZAR — South African Rand (R)" },
+];
+
+declare global {
+  interface Window {
+    FlutterwaveCheckout: (config: Record<string, unknown>) => { close: () => void };
+  }
 }
 
-async function submitDepositRequest(amount: number, paymentMethod: string): Promise<{ id: string; status: string }> {
-  const token = localStorage.getItem("rivora_token");
-  const r = await fetch(`${API}/api/deposit-requests`, {
+async function initiateFlutterwavePayment(
+  amount: number,
+  currency: string,
+  token: string,
+): Promise<{ paymentLink: string; txRef: string; depositRequestId: string }> {
+  const r = await fetch(`${API}/api/flutterwave/initiate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ amount, paymentMethod }),
+    body: JSON.stringify({
+      amount,
+      currency,
+      redirectUrl: `${window.location.origin}/payment-callback`,
+    }),
   });
   if (!r.ok) {
     const err = await r.json();
-    throw new Error(err.message || "Deposit request failed");
+    throw new Error(err.message || "Failed to initiate payment");
   }
   return r.json();
 }
+
+async function verifyPayment(txRef: string, token: string): Promise<{ status: string }> {
+  const r = await fetch(
+    `${API}/api/flutterwave/verify/${encodeURIComponent(txRef)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!r.ok) {
+    const err = await r.json();
+    throw new Error(err.message || "Verification failed");
+  }
+  return r.json();
+}
+
+function loadFlutterwaveScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.FlutterwaveCheckout) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = "https://checkout.flutterwave.com/v3.js";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Failed to load Flutterwave script"));
+    document.head.appendChild(s);
+  });
+}
+
+type DepositStage = "form" | "processing" | "success" | "failed";
 
 export default function DepositPage() {
   const { data: user } = useGetMe();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Platform payment details
-  const [platformBankName, setPlatformBankName] = useState("");
-  const [platformAccountNumber, setPlatformAccountNumber] = useState("");
-  const [platformAccountName, setPlatformAccountName] = useState("");
-  const [loadingSettings, setLoadingSettings] = useState(true);
-
-  // Form state
   const [amount, setAmount] = useState("");
-  const [depositorName, setDepositorName] = useState("");
-  const [countdown, setCountdown] = useState(0);
-  const [countdownStarted, setCountdownStarted] = useState(false);
-  const [paymentMade, setPaymentMade] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const [currency, setCurrency] = useState("NGN");
+  const [stage, setStage] = useState<DepositStage>("form");
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentTxRef, setCurrentTxRef] = useState<string | null>(null);
 
   const isFirstDeposit = user && !user.hasReceivedWelcomeBonus;
+  const token = localStorage.getItem("rivora_token") ?? "";
 
-  // Load platform payment details
-  useEffect(() => {
-    Promise.all([
-      getSetting("platform_bank_name"),
-      getSetting("platform_bank_account_number"),
-      getSetting("platform_bank_account_name"),
-    ]).then(([bank, account, name]) => {
-      setPlatformBankName(bank);
-      setPlatformAccountNumber(account);
-      setPlatformAccountName(name);
-      setLoadingSettings(false);
-    });
-  }, []);
-
-  // Countdown timer
-  useEffect(() => {
-    if (countdownStarted && countdown > 0) {
-      countdownRef.current = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-    }
-    return () => {
-      if (countdownRef.current) clearTimeout(countdownRef.current);
-    };
-  }, [countdownStarted, countdown]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const copyToClipboard = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  };
-
-  const handleStartCountdown = () => {
-    if (!amount || Number(amount) < MIN_DEPOSIT) {
-      toast({ title: "Invalid amount", description: `Minimum deposit is ${formatNaira(MIN_DEPOSIT)}`, variant: "destructive" });
-      return;
-    }
-    if (!depositorName.trim()) {
-      toast({ title: "Missing name", description: "Please enter the depositor's name as it appears on the bank transfer", variant: "destructive" });
-      return;
-    }
-    setCountdownStarted(true);
-    setCountdown(COUNTDOWN_MINUTES * 60);
-    toast({ title: "Countdown started", description: `You have ${COUNTDOWN_MINUTES} minutes to make your payment.` });
-  };
-
-  const handlePaymentMade = async () => {
-    if (!user) return;
-    
+  const handlePay = async () => {
     const numAmount = Number(amount);
-    setIsProcessing(true);
-    
-    try {
-      await submitDepositRequest(numAmount, `Bank Transfer - ${depositorName}`);
-      
-      setPaymentMade(true);
-      toast({ 
-        title: "Deposit Submitted!", 
-        description: "Your deposit is now PENDING. An admin will verify and approve shortly.", 
-        duration: 5000 
+    if (!numAmount || numAmount < MIN_DEPOSIT) {
+      toast({
+        title: "Invalid amount",
+        description: `Minimum deposit is ${formatNaira(MIN_DEPOSIT)}`,
+        variant: "destructive",
       });
-      
-      // Reset form
-      setAmount("");
-      setDepositorName("");
-      setCountdown(0);
-      setCountdownStarted(false);
-    } catch (err: any) {
-      // Clear countdown
-      if (countdownRef.current) clearTimeout(countdownRef.current);
-      toast({ title: "Error", description: err.message || "Deposit failed", variant: "destructive" });
-    } finally {
-      setIsProcessing(false);
+      return;
+    }
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      await loadFlutterwaveScript();
+
+      const { txRef } = await initiateFlutterwavePayment(numAmount, currency, token);
+      setCurrentTxRef(txRef);
+
+      window.FlutterwaveCheckout({
+        public_key: FLW_PUBLIC_KEY,
+        tx_ref: txRef,
+        amount: numAmount,
+        currency,
+        payment_options: "card,banktransfer,ussd,mobilemoney",
+        customer: {
+          email: `${user.phone.replace("+", "")}@rivora.app`,
+          phone_number: user.phone,
+          name: user.fullName,
+        },
+        customizations: {
+          title: "Rivora Exchange",
+          description: `Fund your Rivora account (${currency})`,
+          logo: `${window.location.origin}/rivora-logo.png`,
+        },
+        callback: async (response: { status: string; tx_ref: string }) => {
+          if (response.status === "successful" || response.status === "completed") {
+            setStage("processing");
+            try {
+              const result = await verifyPayment(response.tx_ref, token);
+              if (result.status === "approved") {
+                await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+                setStage("success");
+              } else {
+                setStage("failed");
+              }
+            } catch {
+              setStage("failed");
+            }
+          } else {
+            setStage("failed");
+          }
+        },
+        onclose: () => {
+          setIsLoading(false);
+          setCurrentTxRef(null);
+        },
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Payment initiation failed";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setIsLoading(false);
     }
   };
 
   const handleReset = () => {
     setAmount("");
-    setDepositorName("");
-    setCountdown(0);
-    setCountdownStarted(false);
-    setPaymentMade(false);
-    if (countdownRef.current) clearTimeout(countdownRef.current);
+    setCurrency("NGN");
+    setStage("form");
+    setIsLoading(false);
+    setCurrentTxRef(null);
   };
 
-  // Payment submitted - pending approval screen
-  if (paymentMade) {
+  if (stage === "processing") {
+    return (
+      <AppLayout>
+        <div style={{ padding: "80px 24px", textAlign: "center" }}>
+          <Loader2
+            size={56}
+            color="#D4AF37"
+            style={{ margin: "0 auto 16px", animation: "spin 1s linear infinite" }}
+          />
+          <h1
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 20,
+              fontWeight: 600,
+              color: "#D4AF37",
+              margin: "0 0 8px",
+            }}
+          >
+            Verifying Payment…
+          </h1>
+          <p style={{ color: "#9C9C9C", fontSize: 14 }}>
+            Please wait while we confirm your transaction.
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (stage === "success") {
     return (
       <AppLayout>
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
-          <Clock size={64} color="#D4AF37" style={{ marginBottom: 16 }} />
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, margin: "0 0 12px", color: "#D4AF37" }}>
-            Deposit Submitted!
+          <CheckCircle2 size={64} color="#22c55e" style={{ marginBottom: 16 }} />
+          <h1
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 22,
+              fontWeight: 600,
+              color: "#22c55e",
+              margin: "0 0 12px",
+            }}
+          >
+            Payment Successful!
           </h1>
           <p style={{ color: "#e8eaec", fontSize: 15, marginBottom: 8 }}>
-            Your deposit of {formatNaira(amount)} is now <strong>PENDING</strong>.
+            Your account has been credited.
           </p>
-          <p style={{ color: "#9C9C9C", fontSize: 13, marginBottom: 16 }}>
-            An admin will verify and approve shortly.
-          </p>
-          <Card style={{ padding: 16, margin: "20px auto", maxWidth: 350, background: "rgba(13,32,68,0.5)", border: "1px solid rgba(212,175,55,0.3)" }}>
-            <h4 style={{ fontSize: 13, color: "#D4AF37", margin: "0 0 8px" }}>Deposit Details</h4>
-            <div style={{ textAlign: "left", fontSize: 12, color: "#9C9C9C" }}>
-              <p style={{ margin: "4px 0" }}>Amount: <span style={{ color: "#fff" }}>{formatNaira(amount)}</span></p>
-              <p style={{ margin: "4px 0" }}>Depositor: <span style={{ color: "#fff" }}>{depositorName}</span></p>
-              <p style={{ margin: "4px 0" }}>Status: <span style={{ color: "#D4AF37", fontWeight: 600 }}>PENDING</span></p>
-            </div>
+          {isFirstDeposit && (
+            <p style={{ color: "#D4AF37", fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
+              🎁 Welcome bonus of {formatNaira(WELCOME_BONUS)} has been added!
+            </p>
+          )}
+          <Card
+            style={{
+              padding: 16,
+              margin: "20px auto",
+              maxWidth: 350,
+              background: "rgba(13,32,68,0.5)",
+              border: "1px solid rgba(34,197,94,0.3)",
+            }}
+          >
+            <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0 }}>
+              Transaction ref:{" "}
+              <span style={{ color: "#fff", wordBreak: "break-all" }}>{currentTxRef}</span>
+            </p>
           </Card>
-          <Button onClick={handleReset} className="w-full" style={{ maxWidth: 300, marginTop: 16 }}>
+          <Button
+            onClick={handleReset}
+            style={{ background: "#22c55e", color: "#fff", fontWeight: 700, marginTop: 8 }}
+          >
             Make Another Deposit
           </Button>
         </div>
@@ -185,217 +250,190 @@ export default function DepositPage() {
     );
   }
 
-  // Countdown screen (payment in progress)
-  if (countdownStarted && countdown > 0) {
+  if (stage === "failed") {
     return (
       <AppLayout>
-        <div style={{ padding: "24px 20px" }}>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 20px" }}>Make Payment</h1>
-
-          {/* Countdown Timer */}
-          <Card style={{ padding: 20, marginBottom: 20, textAlign: "center", background: "rgba(201,58,46,0.1)", border: "1px solid rgba(201,58,46,0.3)" }}>
-            <Clock size={32} color="#ef4444" style={{ marginBottom: 8 }} />
-            <p style={{ fontSize: 12, color: "#9C9C9C", margin: "0 0 4px" }}>Time Remaining</p>
-            <p style={{ fontSize: 36, fontWeight: 900, color: countdown < 60 ? "#ef4444" : "#D4AF37", margin: 0 }}>
-              {formatTime(countdown)}
-            </p>
-            <p style={{ fontSize: 11, color: "#9C9C9C", margin: "8px 0 0" }}>Complete your transfer before time runs out</p>
-          </Card>
-
-          {/* Payment Details Reminder */}
-          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(13,32,68,0.5)", border: "1px solid rgba(212,175,55,0.3)" }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#D4AF37", margin: "0 0 12px" }}>Transfer {formatNaira(amount)} to:</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, color: "#9C9C9C" }}>Bank</span>
-                <span style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>{platformBankName}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, color: "#9C9C9C" }}>Account Number</span>
-                <span style={{ fontSize: 15, color: "#D4AF37", fontWeight: 800, letterSpacing: "0.1em" }}>{platformAccountNumber}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, color: "#9C9C9C" }}>Account Name</span>
-                <span style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>{platformAccountName}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, color: "#9C9C9C" }}>Amount</span>
-                <span style={{ fontSize: 15, color: "#22c55e", fontWeight: 800 }}>{formatNaira(amount)}</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card style={{ padding: 16, marginBottom: 24, background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)" }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-              <AlertCircle size={20} color="#ef4444" style={{ marginTop: 2 }} />
-              <div>
-                <p style={{ fontSize: 13, color: "#f87171", margin: 0, fontWeight: 600 }}>Important</p>
-                <p style={{ fontSize: 12, color: "#9C9C9C", margin: "4px 0 0" }}>
-                  After making the transfer, click the button below. Your balance will be credited immediately.
-                  If you don't see the credit, contact support with your User ID: <strong style={{ color: "#fff" }}>{user?.id?.slice(0, 8)}</strong>
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Button 
-            onClick={handlePaymentMade} 
-            disabled={isProcessing}
-            className="w-full"
-            style={{ background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 16, padding: "16px 0" }}
+        <div style={{ padding: "60px 24px", textAlign: "center" }}>
+          <AlertCircle size={64} color="#ef4444" style={{ marginBottom: 16 }} />
+          <h1
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 22,
+              fontWeight: 600,
+              color: "#ef4444",
+              margin: "0 0 12px",
+            }}
           >
-            {isProcessing ? (
-              <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Processing...</>
-            ) : (
-              "✓ I HAVE MADE THE PAYMENT"
-            )}
-          </Button>
-
-          <Button 
-            variant="outline" 
-            onClick={handleReset} 
-            className="w-full mt-3"
-            style={{ borderColor: "rgba(255,255,255,0.2)" }}
+            Payment Failed
+          </h1>
+          <p style={{ color: "#9C9C9C", fontSize: 14, marginBottom: 24 }}>
+            Your payment could not be processed. No funds have been deducted.
+          </p>
+          <Button
+            onClick={handleReset}
+            style={{ background: "#D4AF37", color: "#000", fontWeight: 700 }}
           >
-            Cancel
+            Try Again
           </Button>
         </div>
       </AppLayout>
     );
   }
 
-  // Initial deposit form
   return (
     <AppLayout>
       <div style={{ padding: "24px 20px" }}>
-        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 20px" }}>Deposit</h1>
+        <h1
+          style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontSize: 20,
+            fontWeight: 600,
+            margin: "0 0 20px",
+          }}
+        >
+          Deposit
+        </h1>
 
         {isFirstDeposit && (
-          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.3)" }}>
+          <Card
+            style={{
+              padding: 14,
+              marginBottom: 20,
+              background: "rgba(212,175,55,0.08)",
+              border: "1px solid rgba(212,175,55,0.3)",
+            }}
+          >
             <p style={{ fontSize: 13, color: "#D4AF37", margin: 0, fontWeight: 600 }}>
               🎁 Get a {formatNaira(WELCOME_BONUS)} welcome bonus on your first deposit!
             </p>
           </Card>
         )}
 
-        {/* Platform Payment Details */}
-        {!loadingSettings && (platformBankName || platformAccountNumber || platformAccountName) ? (
-          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(13,32,68,0.5)", border: "1px solid rgba(212,175,55,0.3)" }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#D4AF37", margin: "0 0 12px" }}>💳 Transfer To:</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {platformBankName && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Bank</p>
-                    <p style={{ fontSize: 13, color: "#fff", margin: "2px 0 0", fontWeight: 600 }}>{platformBankName}</p>
-                  </div>
-                  <button 
-                    onClick={() => copyToClipboard(platformBankName, "bank")}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "#9C9C9C", padding: 4 }}
-                  >
-                    {copied === "bank" ? <CheckCheck size={16} color="#22c55e" /> : <Copy size={16} />}
-                  </button>
-                </div>
-              )}
-              {platformAccountNumber && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Account Number</p>
-                    <p style={{ fontSize: 18, color: "#D4AF37", margin: "2px 0 0", fontWeight: 800, letterSpacing: "0.1em" }}>{platformAccountNumber}</p>
-                  </div>
-                  <button 
-                    onClick={() => copyToClipboard(platformAccountNumber, "account")}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "#9C9C9C", padding: 4 }}
-                  >
-                    {copied === "account" ? <CheckCheck size={16} color="#22c55e" /> : <Copy size={16} />}
-                  </button>
-                </div>
-              )}
-              {platformAccountName && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Account Name</p>
-                    <p style={{ fontSize: 13, color: "#fff", margin: "2px 0 0", fontWeight: 600 }}>{platformAccountName}</p>
-                  </div>
-                  <button 
-                    onClick={() => copyToClipboard(platformAccountName, "name")}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "#9C9C9C", padding: 4 }}
-                  >
-                    {copied === "name" ? <CheckCheck size={16} color="#22c55e" /> : <Copy size={16} />}
-                  </button>
-                </div>
-              )}
-            </div>
-          </Card>
-        ) : loadingSettings ? (
-          <Card style={{ padding: 16, marginBottom: 20, textAlign: "center" }}>
-            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#D4AF37", margin: "0 auto" }} />
-            <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 8 }}>Loading payment details...</p>
-          </Card>
-        ) : (
-          <Card style={{ padding: 16, marginBottom: 20, background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)" }}>
-            <p style={{ fontSize: 13, color: "#f87171", margin: 0 }}>
-              ⚠️ Platform payment details not set. Please contact support.
-            </p>
-          </Card>
-        )}
+        <Card
+          style={{
+            padding: 16,
+            marginBottom: 20,
+            background: "rgba(13,32,68,0.4)",
+            border: "1px solid rgba(212,175,55,0.2)",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 12,
+              color: "#9C9C9C",
+              margin: "0 0 12px",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
+            Accepted Payment Methods
+          </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {[
+              { icon: CreditCard, label: "Card" },
+              { icon: Landmark, label: "Bank Transfer" },
+              { icon: Smartphone, label: "Mobile Money" },
+              { icon: Zap, label: "USSD" },
+            ].map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                }}
+              >
+                <Icon size={14} color="#D4AF37" />
+                <span style={{ fontSize: 12, color: "#e8eaec" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
 
-        {/* Deposit Form */}
-        <Card style={{ padding: 16, marginBottom: 20, background: "rgba(0,0,0,0.2)" }}>
-          <div style={{ marginBottom: 16 }}>
-            <Label>Amount to Deposit (₦)</Label>
+        <Card style={{ padding: 20, marginBottom: 20, background: "rgba(0,0,0,0.2)" }}>
+          <div style={{ marginBottom: 18 }}>
+            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Amount</Label>
             <Input
               type="number"
               placeholder={`Minimum ${formatNaira(MIN_DEPOSIT)}`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="mt-2"
+              style={{ marginTop: 8, fontSize: 16 }}
             />
-            <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 6 }}>Minimum deposit: {formatNaira(MIN_DEPOSIT)}</p>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <Label>Depositor's Name (as on transfer)</Label>
-            <Input
-              type="text"
-              placeholder="Enter the name used for the bank transfer"
-              value={depositorName}
-              onChange={(e) => setDepositorName(e.target.value)}
-              className="mt-2"
-            />
-            <p style={{ fontSize: 11, color: "#9C9C9C", marginTop: 4 }}>This helps us verify your payment</p>
-          </div>
-
-          <div style={{ background: "rgba(212,175,55,0.1)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <Clock size={16} color="#D4AF37" />
-              <span style={{ fontSize: 12, color: "#D4AF37", fontWeight: 600 }}>{COUNTDOWN_MINUTES} Minutes Countdown</span>
-            </div>
-            <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>
-              Once you start, you'll have {COUNTDOWN_MINUTES} minutes to complete your bank transfer.
+            <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 6 }}>
+              Minimum deposit: {formatNaira(MIN_DEPOSIT)}
             </p>
           </div>
 
-          <Button 
-            onClick={handleStartCountdown} 
+          <div style={{ marginBottom: 24 }}>
+            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Currency</Label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              style={{
+                display: "block",
+                width: "100%",
+                marginTop: 8,
+                padding: "10px 12px",
+                fontSize: 14,
+                background: "#0a0a0a",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 8,
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.value} value={c.value} style={{ background: "#0a0a0a" }}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Button
+            onClick={handlePay}
+            disabled={isLoading || !amount}
             className="w-full"
-            style={{ background: "#D4AF37", color: "#000", fontWeight: 700 }}
+            style={{
+              background: isLoading ? "rgba(212,175,55,0.5)" : "#D4AF37",
+              color: "#000",
+              fontWeight: 700,
+              fontSize: 15,
+              padding: "14px 0",
+            }}
           >
-            <Clock className="h-4 w-4 mr-2" />
-            START COUNTDOWN & MAKE PAYMENT
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Launching Payment…
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Pay with Flutterwave
+              </>
+            )}
           </Button>
         </Card>
 
-        <Card style={{ padding: 16, background: "rgba(13,32,68,0.3)" }}>
-          <h4 style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>How it works:</h4>
-          <ol style={{ fontSize: 12, color: "#9C9C9C", margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
-            <li>Copy the account details above</li>
-            <li>Enter amount and your name as on transfer</li>
-            <li>Start countdown - you have 10 minutes</li>
-            <li>Make the bank transfer</li>
-            <li>Click "I HAVE MADE THE PAYMENT"</li>
-            <li>Money credited instantly to your account!</li>
-          </ol>
+        <Card
+          style={{
+            padding: 14,
+            background: "rgba(13,32,68,0.3)",
+            border: "1px solid rgba(255,255,255,0.05)",
+          }}
+        >
+          <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0, lineHeight: 1.7 }}>
+            🔒 Payments are processed securely by{" "}
+            <span style={{ color: "#D4AF37" }}>Flutterwave</span>. Your card and bank
+            details are never stored on our servers. Funds are credited instantly upon
+            successful payment.
+          </p>
         </Card>
       </div>
     </AppLayout>
