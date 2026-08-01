@@ -1,11 +1,10 @@
 import { type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { useGetMe } from "@workspace/api-client-react";
+import { useAuth } from "@/context/AuthContext";
+import { useTenant } from "@/context/TenantContext";
 import { Home, TrendingUp, Briefcase, ArrowDownToLine, User } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { WelcomeModal } from "@/components/WelcomeModal";
-
-const SUPPORT_URL = "https://t.me/+jlGJpM4cdYY5NmRk";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -17,9 +16,12 @@ const NAV_ITEMS = [
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { data: user, isLoading } = useGetMe();
+  const { user, loading } = useAuth();
+  const { tenant } = useTenant();
+  const SUPPORT_URL = tenant?.telegram_url ?? tenant?.whatsapp_url ?? "https://t.me/+jlGJpM4cdYY5NmRk";
+  const primary = tenant?.primary_color ?? "#D4AF37";
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <LoadingSpinner />
@@ -66,7 +68,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           const active = location === item.href;
           const Icon = item.icon;
           return (
-            <Link key={item.href} href={item.href} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, color:active?"#D4AF37":"#9C9C9C", fontSize:11, textDecoration:"none", flex:1 }}>
+            <Link key={item.href} href={item.href} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, color:active?primary:"#9C9C9C", fontSize:11, textDecoration:"none", flex:1 }}>
               <Icon size={20} />
               {item.label}
             </Link>

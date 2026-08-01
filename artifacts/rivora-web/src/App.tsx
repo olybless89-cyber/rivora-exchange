@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Route, Switch, Redirect } from "wouter";
 import { ToastProvider, Toaster } from "@/hooks/use-toast";
+import { TenantProvider } from "@/context/TenantContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 import RegisterPage from "@/pages/Register";
 import LoginPage from "@/pages/Login";
@@ -22,6 +24,9 @@ import AdminPlansPage from "@/pages/admin/Plans";
 import AdminTransactionsPage from "@/pages/admin/Transactions";
 import AdminSettingsPage from "@/pages/admin/Settings";
 import AdminDashboardPage from "@/pages/admin/Index";
+import SuperAdminPage from "@/pages/superadmin/Index";
+import SuperAdminTenantsPage from "@/pages/superadmin/Tenants";
+import SuperAdminTenantEditPage from "@/pages/superadmin/TenantEdit";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -49,6 +54,10 @@ function Router() {
       <Route path="/admin/plans" component={AdminPlansPage} />
       <Route path="/admin/transactions" component={AdminTransactionsPage} />
       <Route path="/admin/settings" component={AdminSettingsPage} />
+      {/* Super-admin routes */}
+      <Route path="/superadmin" component={SuperAdminPage} />
+      <Route path="/superadmin/tenants" component={SuperAdminTenantsPage} />
+      <Route path="/superadmin/tenants/:id" component={SuperAdminTenantEditPage} />
       <Route component={NotFoundPage} />
     </Switch>
   );
@@ -57,10 +66,14 @@ function Router() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <Router />
-        <Toaster />
-      </ToastProvider>
+      <TenantProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Router />
+            <Toaster />
+          </ToastProvider>
+        </AuthProvider>
+      </TenantProvider>
     </QueryClientProvider>
   );
 }

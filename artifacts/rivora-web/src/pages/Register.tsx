@@ -4,13 +4,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
-import { useRegister } from "@workspace/api-client-react";
-import { setToken } from "@/lib/auth";
+import { supabase } from "@/lib/supabase/client";
+import { useTenant } from "@/context/TenantContext";
+import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { HeroBanner } from "@/components/HeroBanner";
 
 const fullSchema = z.object({
   phone: z.string().min(10, "Enter a valid Nigerian phone number"),
@@ -26,13 +26,16 @@ function randomCaptcha() { return String(Math.floor(1000 + Math.random() * 9000)
 export default function RegisterPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const registerMutation = useRegister();
+  const { tenant } = useTenant();
+  const { refreshUser } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [captcha, setCaptcha] = useState(randomCaptcha);
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaError, setCaptchaError] = useState<string | null>(null);
+  const primary = tenant?.primary_color ?? "#D4AF37";
 
   const form = useForm<FullValues>({
     resolver: zodResolver(fullSchema),
@@ -48,24 +51,49 @@ export default function RegisterPage() {
   const goBack = () => setStep(s => Math.max(1, s - 1));
   const refreshCaptcha = () => { setCaptcha(randomCaptcha()); setCaptchaInput(""); setCaptchaError(null); };
 
-  const onSubmit = (values: FullValues) => {
+  const onSubmit = async (values: FullValues) => {
     if (captchaInput !== captcha) { setCaptchaError("Incorrect code, please try again."); refreshCaptcha(); return; }
-    registerMutation.mutate({ data: { phone: values.phone, fullName: values.fullName, password: values.password, confirmPassword: values.confirmPassword, referralCode: values.referralCode.trim().toUpperCase() } }, {
-      onSuccess: (res) => { setToken(res.token); setLocation("/dashboard"); },
-      onError: (err: any) => { toast({ title: "Registration failed", description: err?.data?.message || err?.message || "Check your referral code.", variant: "destructive" }); refreshCaptcha(); },
-    });
+    if (!tenant) { toast({ title: "Error", description: "Site configuration not loaded.", variant: "destructive" }); return; }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auth-register", {
+        body: {
+          phone: values.phone,
+          password: values.password,
+          full_name: values.fullName,
+          referral_code: values.referralCode.trim().toUpperCase(),
+          tenant_id: tenant.id,
+        },
+      });
+      if (error) {
+        const msg = await error?.context?.text();
+        throw new Error(msg || error.message);
+      }
+      if (data?.session) {
+        await supabase.auth.setSession(data.session);
+        await refreshUser();
+      }
+      setLocation("/dashboard");
+    } catch (err: unknown) {
+      toast({ title: "Registration failed", description: err instanceof Error ? err.message : "Check your referral code.", variant: "destructive" });
+      refreshCaptcha();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div style={{ minHeight:"100dvh",padding:"40px 24px",display:"flex",flexDirection:"column" }}>
       <div style={{ textAlign:"center",marginBottom:32 }}>
-        <img src="/rivora-logo.png" alt="RIVORA EXCHANGE" style={{ width:64,height:64,objectFit:"contain",margin:"0 auto 12px" }} />
+        {tenant?.logo_url
+          ? <img src={tenant.logo_url} alt={tenant.name} style={{ width:64,height:64,objectFit:"contain",margin:"0 auto 12px" }} />
+          : <div style={{ width:64,height:64,borderRadius:14,background:primary,margin:"0 auto 12px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,fontWeight:700,color:"#000" }}>{(tenant?.name ?? "R")[0]}</div>
+        }
         <h1 style={{ fontFamily:"'Playfair Display',Georgia,serif",fontSize:22,fontWeight:600,margin:0 }}>Create Account</h1>
-        <p style={{ color:"#9C9C9C",fontSize:13,marginTop:4 }}>Join RIVORA EXCHANGE — Trade. Invest. Grow.</p>
+        <p style={{ color:"#9C9C9C",fontSize:13,marginTop:4 }}>Join {tenant?.name ?? "us"} — Trade. Invest. Grow.</p>
       </div>
-      <HeroBanner />
       <div style={{ display:"flex",gap:6,marginBottom:28 }}>
-        {[1,2,3].map(s => <div key={s} style={{ flex:1,height:4,borderRadius:2,background:s<=step?"#D4AF37":"rgba(255,255,255,0.1)" }} />)}
+        {[1,2,3].map(s => <div key={s} style={{ flex:1,height:4,borderRadius:2,background:s<=step?primary:"rgba(255,255,255,0.1)" }} />)}
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} style={{ display:"flex",flexDirection:"column",gap:20 }}>
@@ -129,8 +157,8 @@ export default function RegisterPage() {
             </div>
             <div style={{ display:"flex",gap:12 }}>
               <Button type="button" variant="outline" onClick={goBack} className="flex-1">Back</Button>
-              <Button type="submit" disabled={registerMutation.isPending||captchaInput.length!==4} className="flex-1">
-                {registerMutation.isPending?<Loader2 className="h-4 w-4 animate-spin"/>:"Register"}
+              <Button type="submit" disabled={loading || captchaInput.length!==4} className="flex-1">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin"/> : "Register"}
               </Button>
             </div>
           </>}
