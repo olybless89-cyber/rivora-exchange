@@ -345,7 +345,7 @@ export default function DepositPage() {
         {/* Footer — no Flutterwave mention */}
         <Card style={{ padding: 14, background: "rgba(13,32,68,0.3)", border: "1px solid rgba(255,255,255,0.05)" }}>
           <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0, lineHeight: 1.7 }}>
-            🔒 Payments are processed securely by <span style={{ color: "#D4AF37" }}>Rivora Exchange</span>. Your card and bank details are never stored on our servers. Funds are credited instantly upon successful payment.
+            🔒 Payments are processed securely by <span style={{ color: "#D4AF37" }}>Rivora Exchange Nig Ltd</span>. Your card and bank details are never stored on our servers. Funds are credited instantly upon successful payment.
           </p>
         </Card>
       </div>

@@ -34,6 +34,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <WelcomeModal />
       <div style={{ flex: 1 }}>{children}</div>
 
+      {/* Footer credit */}
+      <div style={{ textAlign: "center", padding: "10px 16px 6px", marginBottom: 76 }}>
+        <p style={{ fontSize: 10, color: "#444", margin: 0, letterSpacing: "0.04em" }}>
+          © {new Date().getFullYear()} RIVORA EXCHANGE NIG LTD. All rights reserved.
+        </p>
+      </div>
+
       {/* Support Care floating button */}
       <a
         href={SUPPORT_URL}
