@@ -13,9 +13,6 @@ import {
   Loader2,
   AlertCircle,
   Landmark,
-  CreditCard,
-  Smartphone,
-  Zap,
   ShieldCheck,
 } from "lucide-react";
 
@@ -23,15 +20,6 @@ const API = import.meta.env.VITE_API_BASE_URL as string;
 const FLW_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY as string;
 const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
-
-// Currency options
-const CURRENCIES = [
-  { value: "NGN", label: "NGN — Nigerian Naira (₦)" },
-  { value: "USD", label: "USD — US Dollar ($)" },
-  { value: "GHS", label: "GHS — Ghanaian Cedi (₵)" },
-  { value: "KES", label: "KES — Kenyan Shilling (KSh)" },
-  { value: "ZAR", label: "ZAR — South African Rand (R)" },
-];
 
 // Flutterwave global type
 declare global {
@@ -42,13 +30,12 @@ declare global {
 
 async function initiatePayment(
   amount: number,
-  currency: string,
   token: string,
 ): Promise<{ paymentLink: string; txRef: string; depositRequestId: string }> {
   const r = await fetch(`${API}/api/flutterwave/initiate`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ amount, currency, redirectUrl: `${window.location.origin}/payment-callback` }),
+    body: JSON.stringify({ amount, currency: "NGN", redirectUrl: `${window.location.origin}/payment-callback` }),
   });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
@@ -87,7 +74,6 @@ export default function DepositPage() {
   const { toast } = useToast();
 
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("NGN");
   const [stage, setStage] = useState<DepositStage>("form");
   const [isLoading, setIsLoading] = useState(false);
   const [currentTxRef, setCurrentTxRef] = useState<string | null>(null);
@@ -113,16 +99,15 @@ export default function DepositPage() {
       await loadPaymentScript();
 
       // Create deposit request + get tx_ref from backend
-      const { txRef } = await initiatePayment(numAmount, currency, token);
+      const { txRef } = await initiatePayment(numAmount, token);
       setCurrentTxRef(txRef);
 
-      // Open inline checkout — user picks bank transfer, card, USSD etc.
       window.FlutterwaveCheckout({
         public_key: FLW_PUBLIC_KEY,
         tx_ref: txRef,
         amount: numAmount,
-        currency,
-        payment_options: "banktransfer,card,ussd,mobilemoney",
+        currency: "NGN",
+        payment_options: "banktransfer",
         customer: {
           email: `${user.phone.replace("+", "")}@rivora.app`,
           phone_number: user.phone,
@@ -170,7 +155,6 @@ export default function DepositPage() {
 
   const handleReset = () => {
     setAmount("");
-    setCurrency("NGN");
     setStage("form");
     setIsLoading(false);
     setCurrentTxRef(null);
@@ -267,31 +251,18 @@ export default function DepositPage() {
         {/* Accepted Payment Methods — no brand name */}
         <Card style={{ padding: 16, marginBottom: 20, background: "rgba(13,32,68,0.4)", border: "1px solid rgba(212,175,55,0.2)" }}>
           <p style={{ fontSize: 12, color: "#9C9C9C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Accepted Payment Methods
+            Accepted Payment Method
           </p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[
-              { icon: Landmark,    label: "Bank Transfer" },
-              { icon: CreditCard,  label: "Card" },
-              { icon: Zap,         label: "USSD" },
-              { icon: Smartphone,  label: "Mobile Money" },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 8, padding: "6px 12px",
-              }}>
-                <Icon size={13} color="#D4AF37" />
-                <span style={{ fontSize: 12, color: "#e8eaec" }}>{label}</span>
-              </div>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 10, padding: "10px 14px", width: "fit-content" }}>
+            <Landmark size={16} color="#D4AF37" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#D4AF37" }}>Bank Transfer Only</span>
           </div>
         </Card>
 
         <Card style={{ padding: 20, marginBottom: 20, background: "rgba(0,0,0,0.2)" }}>
           {/* Amount */}
-          <div style={{ marginBottom: 18 }}>
-            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Amount</Label>
+          <div style={{ marginBottom: 24 }}>
+            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Amount (NGN)</Label>
             <Input
               type="number"
               placeholder={`Minimum ${formatNaira(MIN_DEPOSIT)}`}
@@ -302,26 +273,6 @@ export default function DepositPage() {
             <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 6 }}>
               Minimum deposit: {formatNaira(MIN_DEPOSIT)}
             </p>
-          </div>
-
-          {/* Currency */}
-          <div style={{ marginBottom: 24 }}>
-            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Currency</Label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              style={{
-                display: "block", width: "100%", marginTop: 8, padding: "10px 12px",
-                fontSize: 14, background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 8, color: "#fff", cursor: "pointer",
-              }}
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c.value} value={c.value} style={{ background: "#0a0a0a" }}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Pay button — no "Flutterwave" text */}
