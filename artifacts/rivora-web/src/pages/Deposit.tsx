@@ -13,27 +13,46 @@ import {
   Loader2,
   AlertCircle,
   Landmark,
-  ExternalLink,
-  Copy,
-  CheckCheck,
+  CreditCard,
+  Smartphone,
+  Zap,
+  ShieldCheck,
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE_URL as string;
+const FLW_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY as string;
 const MIN_DEPOSIT = 20_000;
 const WELCOME_BONUS = 2_000;
 
+// Currency options
+const CURRENCIES = [
+  { value: "NGN", label: "NGN — Nigerian Naira (₦)" },
+  { value: "USD", label: "USD — US Dollar ($)" },
+  { value: "GHS", label: "GHS — Ghanaian Cedi (₵)" },
+  { value: "KES", label: "KES — Kenyan Shilling (KSh)" },
+  { value: "ZAR", label: "ZAR — South African Rand (R)" },
+];
+
+// Flutterwave global type
+declare global {
+  interface Window {
+    FlutterwaveCheckout: (config: Record<string, unknown>) => { close: () => void };
+  }
+}
+
 async function initiatePayment(
   amount: number,
+  currency: string,
   token: string,
 ): Promise<{ paymentLink: string; txRef: string; depositRequestId: string }> {
   const r = await fetch(`${API}/api/flutterwave/initiate`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ amount, currency: "NGN", redirectUrl: `${window.location.origin}/payment-callback` }),
+    body: JSON.stringify({ amount, currency, redirectUrl: `${window.location.origin}/payment-callback` }),
   });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
-    throw new Error(err.message || "Could not generate payment link");
+    throw new Error(err.message || "Could not initiate payment");
   }
   return r.json();
 }
@@ -49,7 +68,18 @@ async function verifyPayment(txRef: string, token: string): Promise<{ status: st
   return r.json();
 }
 
-type DepositStage = "form" | "awaiting" | "confirming" | "success" | "failed";
+function loadPaymentScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.FlutterwaveCheckout) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = "https://checkout.flutterwave.com/v3.js";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Failed to load payment processor"));
+    document.head.appendChild(s);
+  });
+}
+
+type DepositStage = "form" | "processing" | "success" | "failed";
 
 export default function DepositPage() {
   const { data: user } = useGetMe();
@@ -57,66 +87,97 @@ export default function DepositPage() {
   const { toast } = useToast();
 
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("NGN");
   const [stage, setStage] = useState<DepositStage>("form");
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentLink, setPaymentLink] = useState<string | null>(null);
-  const [txRef, setTxRef] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [currentTxRef, setCurrentTxRef] = useState<string | null>(null);
 
   const isFirstDeposit = user && !user.hasReceivedWelcomeBonus;
   const token = localStorage.getItem("rivora_token") ?? "";
 
-  const handleGenerateLink = async () => {
+  const handlePay = async () => {
     const numAmount = Number(amount);
     if (!numAmount || numAmount < MIN_DEPOSIT) {
-      toast({ title: "Invalid amount", description: `Minimum deposit is ${formatNaira(MIN_DEPOSIT)}`, variant: "destructive" });
+      toast({
+        title: "Invalid amount",
+        description: `Minimum deposit is ${formatNaira(MIN_DEPOSIT)}`,
+        variant: "destructive",
+      });
       return;
     }
     if (!user) return;
+
     setIsLoading(true);
     try {
-      const result = await initiatePayment(numAmount, token);
-      setPaymentLink(result.paymentLink);
-      setTxRef(result.txRef);
-      setStage("awaiting");
+      // Load the secure payment script silently
+      await loadPaymentScript();
+
+      // Create deposit request + get tx_ref from backend
+      const { txRef } = await initiatePayment(numAmount, currency, token);
+      setCurrentTxRef(txRef);
+
+      // Open inline checkout — user picks bank transfer, card, USSD etc.
+      window.FlutterwaveCheckout({
+        public_key: FLW_PUBLIC_KEY,
+        tx_ref: txRef,
+        amount: numAmount,
+        currency,
+        payment_options: "banktransfer,card,ussd,mobilemoney",
+        customer: {
+          email: `${user.phone.replace("+", "")}@rivora.app`,
+          phone_number: user.phone,
+          name: user.fullName,
+        },
+        customizations: {
+          title: "Rivora Exchange",
+          description: `Fund your Rivora wallet`,
+          logo: `${window.location.origin}/rivora-logo.png`,
+        },
+        callback: async (response: { status: string; tx_ref: string }) => {
+          // Payment processor confirmed the payment — now verify on our backend
+          if (response.status === "successful" || response.status === "completed") {
+            setStage("processing");
+            try {
+              const result = await verifyPayment(response.tx_ref, token);
+              if (result.status === "approved") {
+                await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+                setStage("success");
+              } else {
+                setStage("failed");
+              }
+            } catch {
+              setStage("failed");
+            }
+          } else {
+            setStage("failed");
+          }
+        },
+        onclose: () => {
+          // Modal closed without completing payment
+          setIsLoading(false);
+          setCurrentTxRef(null);
+        },
+      });
     } catch (err: unknown) {
-      toast({ title: "Error", description: err instanceof Error ? err.message : "Could not generate payment link", variant: "destructive" });
-    } finally {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Payment initiation failed",
+        variant: "destructive",
+      });
       setIsLoading(false);
     }
   };
 
-  const handleConfirmPayment = async () => {
-    if (!txRef) return;
-    setStage("confirming");
-    try {
-      const result = await verifyPayment(txRef, token);
-      if (result.status === "approved") {
-        await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-        setStage("success");
-      } else {
-        setStage("failed");
-      }
-    } catch {
-      setStage("failed");
-    }
-  };
-
-  const copyLink = () => {
-    if (paymentLink) {
-      navigator.clipboard.writeText(paymentLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   const handleReset = () => {
-    setAmount(""); setStage("form"); setIsLoading(false);
-    setPaymentLink(null); setTxRef(null); setCopied(false);
+    setAmount("");
+    setCurrency("NGN");
+    setStage("form");
+    setIsLoading(false);
+    setCurrentTxRef(null);
   };
 
-  // ── Confirming ──────────────────────────────────────────────
-  if (stage === "confirming") {
+  // ── Processing (verifying with backend after payment confirmed) ──
+  if (stage === "processing") {
     return (
       <AppLayout>
         <div style={{ padding: "80px 24px", textAlign: "center" }}>
@@ -124,7 +185,7 @@ export default function DepositPage() {
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, color: "#D4AF37", margin: "0 0 8px" }}>
             Confirming Payment…
           </h1>
-          <p style={{ color: "#9C9C9C", fontSize: 14 }}>Please wait while we verify your transfer.</p>
+          <p style={{ color: "#9C9C9C", fontSize: 14 }}>Please wait while we credit your account.</p>
         </div>
       </AppLayout>
     );
@@ -137,13 +198,22 @@ export default function DepositPage() {
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
           <CheckCircle2 size={64} color="#22c55e" style={{ marginBottom: 16 }} />
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, color: "#22c55e", margin: "0 0 12px" }}>
-            Payment Confirmed!
+            Payment Successful!
           </h1>
-          <p style={{ color: "#e8eaec", fontSize: 15, marginBottom: 8 }}>Your balance has been credited successfully.</p>
+          <p style={{ color: "#e8eaec", fontSize: 15, marginBottom: 8 }}>
+            Your account has been credited.
+          </p>
           {isFirstDeposit && (
             <p style={{ color: "#D4AF37", fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
               🎁 Welcome bonus of {formatNaira(WELCOME_BONUS)} has been added!
             </p>
+          )}
+          {currentTxRef && (
+            <Card style={{ padding: 12, margin: "16px auto", maxWidth: 340, background: "rgba(13,32,68,0.5)", border: "1px solid rgba(34,197,94,0.25)" }}>
+              <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>
+                Ref: <span style={{ color: "#fff", wordBreak: "break-all" }}>{currentTxRef}</span>
+              </p>
+            </Card>
           )}
           <Button onClick={handleReset} style={{ background: "#22c55e", color: "#fff", fontWeight: 700, marginTop: 8 }}>
             Make Another Deposit
@@ -160,86 +230,19 @@ export default function DepositPage() {
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
           <AlertCircle size={64} color="#ef4444" style={{ marginBottom: 16 }} />
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 600, color: "#ef4444", margin: "0 0 12px" }}>
-            Payment Not Found
+            Payment Failed
           </h1>
           <p style={{ color: "#9C9C9C", fontSize: 14, marginBottom: 24 }}>
-            We could not confirm your transfer yet. If you already paid, contact support with your reference.
+            Your payment could not be processed. No funds have been deducted.
           </p>
-          {txRef && <p style={{ fontSize: 12, color: "#9C9C9C", marginBottom: 24 }}>Ref: <span style={{ color: "#D4AF37" }}>{txRef}</span></p>}
-          <Button onClick={handleReset} style={{ background: "#D4AF37", color: "#000", fontWeight: 700 }}>Try Again</Button>
-        </div>
-      </AppLayout>
-    );
-  }
-
-  // ── Awaiting transfer ────────────────────────────────────────
-  if (stage === "awaiting" && paymentLink) {
-    return (
-      <AppLayout>
-        <div style={{ padding: "24px 20px" }}>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 600, margin: "0 0 6px" }}>
-            Complete Your Deposit
-          </h1>
-          <p style={{ color: "#9C9C9C", fontSize: 13, margin: "0 0 24px" }}>
-            Amount: <span style={{ color: "#D4AF37", fontWeight: 600 }}>{formatNaira(Number(amount))}</span>
-          </p>
-
-          {/* Step 1 */}
-          <Card style={{ padding: 20, marginBottom: 14, border: "1px solid rgba(212,175,55,0.2)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#D4AF37", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>1</span>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: 0 }}>Open your payment page</p>
-            </div>
-            <p style={{ fontSize: 13, color: "#9C9C9C", margin: "0 0 14px", lineHeight: 1.6 }}>
-              Tap below to open your secure payment page and follow the bank transfer instructions shown.
+          {currentTxRef && (
+            <p style={{ fontSize: 12, color: "#9C9C9C", marginBottom: 20 }}>
+              Ref: <span style={{ color: "#D4AF37" }}>{currentTxRef}</span>
             </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <Button onClick={() => window.open(paymentLink, "_blank")} className="flex-1"
-                style={{ background: "#D4AF37", color: "#000", fontWeight: 700, fontSize: 14 }}>
-                <ExternalLink size={16} style={{ marginRight: 8 }} />Open Payment Page
-              </Button>
-              <Button onClick={copyLink}
-                style={{ background: copied ? "#22c55e" : "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: copied ? "#fff" : "#e8eaec", padding: "0 14px" }}>
-                {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
-              </Button>
-            </div>
-          </Card>
-
-          {/* Step 2 */}
-          <Card style={{ padding: 20, marginBottom: 14, border: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#D4AF37" }}>2</span>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: 0 }}>Complete the bank transfer</p>
-            </div>
-            <p style={{ fontSize: 13, color: "#9C9C9C", margin: 0, lineHeight: 1.6 }}>
-              Transfer exactly <span style={{ color: "#D4AF37", fontWeight: 600 }}>{formatNaira(Number(amount))}</span> to the account number shown on the payment page.
-            </p>
-          </Card>
-
-          {/* Step 3 */}
-          <Card style={{ padding: 20, marginBottom: 24, border: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#D4AF37" }}>3</span>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: 0 }}>Confirm after paying</p>
-            </div>
-            <p style={{ fontSize: 13, color: "#9C9C9C", margin: "0 0 14px", lineHeight: 1.6 }}>
-              Once your transfer is complete, tap below to credit your balance instantly.
-            </p>
-            <Button onClick={handleConfirmPayment} className="w-full"
-              style={{ background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 14, padding: "13px 0" }}>
-              <CheckCircle2 size={16} style={{ marginRight: 8 }} />I Have Paid — Confirm Now
-            </Button>
-          </Card>
-
-          <p style={{ fontSize: 11, color: "#555", textAlign: "center", lineHeight: 1.6 }}>
-            🔒 Processed securely by Rivora Exchange. Ref: <span style={{ color: "#9C9C9C" }}>{txRef}</span>
-          </p>
+          )}
+          <Button onClick={handleReset} style={{ background: "#D4AF37", color: "#000", fontWeight: 700 }}>
+            Try Again
+          </Button>
         </div>
       </AppLayout>
     );
@@ -261,20 +264,34 @@ export default function DepositPage() {
           </Card>
         )}
 
-        {/* Accepted Payment Method */}
+        {/* Accepted Payment Methods — no brand name */}
         <Card style={{ padding: 16, marginBottom: 20, background: "rgba(13,32,68,0.4)", border: "1px solid rgba(212,175,55,0.2)" }}>
           <p style={{ fontSize: 12, color: "#9C9C9C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Accepted Payment Method
+            Accepted Payment Methods
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 10, padding: "10px 14px", width: "fit-content" }}>
-            <Landmark size={16} color="#D4AF37" />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#D4AF37" }}>Bank Transfer</span>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              { icon: Landmark,    label: "Bank Transfer" },
+              { icon: CreditCard,  label: "Card" },
+              { icon: Zap,         label: "USSD" },
+              { icon: Smartphone,  label: "Mobile Money" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 8, padding: "6px 12px",
+              }}>
+                <Icon size={13} color="#D4AF37" />
+                <span style={{ fontSize: 12, color: "#e8eaec" }}>{label}</span>
+              </div>
+            ))}
           </div>
         </Card>
 
         <Card style={{ padding: 20, marginBottom: 20, background: "rgba(0,0,0,0.2)" }}>
-          <div style={{ marginBottom: 24 }}>
-            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Amount (NGN)</Label>
+          {/* Amount */}
+          <div style={{ marginBottom: 18 }}>
+            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Amount</Label>
             <Input
               type="number"
               placeholder={`Minimum ${formatNaira(MIN_DEPOSIT)}`}
@@ -282,26 +299,53 @@ export default function DepositPage() {
               onChange={(e) => setAmount(e.target.value)}
               style={{ marginTop: 8, fontSize: 16 }}
             />
-            <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 6 }}>Minimum deposit: {formatNaira(MIN_DEPOSIT)}</p>
+            <p style={{ fontSize: 12, color: "#9C9C9C", marginTop: 6 }}>
+              Minimum deposit: {formatNaira(MIN_DEPOSIT)}
+            </p>
           </div>
 
+          {/* Currency */}
+          <div style={{ marginBottom: 24 }}>
+            <Label style={{ fontSize: 13, color: "#9C9C9C" }}>Currency</Label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              style={{
+                display: "block", width: "100%", marginTop: 8, padding: "10px 12px",
+                fontSize: 14, background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 8, color: "#fff", cursor: "pointer",
+              }}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.value} value={c.value} style={{ background: "#0a0a0a" }}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Pay button — no "Flutterwave" text */}
           <Button
-            onClick={handleGenerateLink}
+            onClick={handlePay}
             disabled={isLoading || !amount}
             className="w-full"
-            style={{ background: isLoading ? "rgba(212,175,55,0.5)" : "#D4AF37", color: "#000", fontWeight: 700, fontSize: 15, padding: "14px 0" }}
+            style={{
+              background: isLoading ? "rgba(212,175,55,0.5)" : "#D4AF37",
+              color: "#000", fontWeight: 700, fontSize: 15, padding: "14px 0",
+            }}
           >
             {isLoading ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-2" />Generating Payment Link…</>
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" />Opening Payment…</>
             ) : (
-              <><Landmark className="h-4 w-4 mr-2" />Generate Payment Link</>
+              <><ShieldCheck className="h-4 w-4 mr-2" />Pay Securely</>
             )}
           </Button>
         </Card>
 
+        {/* Footer — no Flutterwave mention */}
         <Card style={{ padding: 14, background: "rgba(13,32,68,0.3)", border: "1px solid rgba(255,255,255,0.05)" }}>
           <p style={{ fontSize: 12, color: "#9C9C9C", margin: 0, lineHeight: 1.7 }}>
-            🔒 Your payment is processed securely by <span style={{ color: "#D4AF37" }}>Rivora Exchange</span>. Bank details are never stored on our servers. Funds are credited upon confirmation.
+            🔒 Payments are processed securely by <span style={{ color: "#D4AF37" }}>Rivora Exchange</span>. Your card and bank details are never stored on our servers. Funds are credited instantly upon successful payment.
           </p>
         </Card>
       </div>
