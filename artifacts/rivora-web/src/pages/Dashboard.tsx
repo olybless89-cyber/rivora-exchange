@@ -170,33 +170,37 @@ export default function DashboardPage() {
         </div>
         <PlanCarousel plans={plans ?? []} />
 
-        {/* Next Mining Countdown — only shown when user has active investments */}
-        {activeInvestments.length > 0 && (
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
-            borderRadius: 14, padding: "14px 18px", marginBottom: 24,
-          }}>
-            <div>
-              <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9C9C9C", margin: 0 }}>
-                Next Mining
-              </p>
-              <p style={{ fontSize: 22, fontWeight: 800, color: "#f59e0b", margin: "4px 0 2px", fontVariantNumeric: "tabular-nums", letterSpacing: 2 }}>
-                {h}:{m}:{s}
-              </p>
+        {/* Next Mining Countdown — always visible */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
+          borderRadius: 14, padding: "14px 18px", marginBottom: 24,
+        }}>
+          <div>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9C9C9C", margin: 0 }}>
+              Next Mining
+            </p>
+            <p className="tabular-nums" style={{ fontSize: 22, fontWeight: 800, color: "#f59e0b", margin: "4px 0 2px", letterSpacing: 2 }}>
+              {h}:{m}:{s}
+            </p>
+            {activeInvestments.length > 0 ? (
               <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>
                 Daily income: <span style={{ color: "#D4AF37", fontWeight: 600 }}>{formatNaira(totalDailyIncome)}</span>
               </p>
-            </div>
-            <div style={{
-              width: 52, height: 52, borderRadius: 14,
-              background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 24 }}>⛏️</span>
-            </div>
+            ) : (
+              <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>
+                Invest to start earning daily income
+              </p>
+            )}
           </div>
-        )}
+          <div style={{
+            width: 52, height: 52, borderRadius: 14,
+            background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 24 }}>⛏️</span>
+          </div>
+        </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Recent Transactions</h2>
