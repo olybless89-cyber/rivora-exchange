@@ -113,10 +113,34 @@ export default function DepositPage() {
     }
     if (!user) return;
 
+    // Guard: env vars must be set
+    if (!API || !FLW_PUBLIC_KEY) {
+      toast({
+        title: "Configuration Error",
+        description: "Payment is not configured. Please contact support.",
+        variant: "destructive",
+      });
+      console.error("[Deposit] Missing env vars — VITE_API_BASE_URL:", API, "VITE_FLUTTERWAVE_PUBLIC_KEY:", FLW_PUBLIC_KEY);
+      return;
+    }
+
+    if (!token) {
+      toast({
+        title: "Session Expired",
+        description: "Please log out and log back in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
+    console.log("[Deposit] Starting payment — amount:", numAmount, "api:", API);
     try {
+      console.log("[Deposit] Loading payment script…");
       await loadPaymentScript();
+      console.log("[Deposit] Script loaded. Initiating payment…");
       const { txRef } = await initiatePayment(numAmount, token);
+      console.log("[Deposit] Got txRef:", txRef);
       setCurrentTxRef(txRef);
 
       // Modal is handing off to Flutterwave — stop the button spinner now
@@ -139,17 +163,20 @@ export default function DepositPage() {
           logo: `${window.location.origin}/rivora-logo.png`,
         },
         callback: async (response: { status: string; tx_ref: string }) => {
+          console.log("[Deposit] FLW callback status:", response.status);
           if (response.status === "successful" || response.status === "completed") {
             setStage("processing");
             try {
               const result = await verifyPayment(response.tx_ref, token);
+              console.log("[Deposit] Verify result:", result.status);
               if (result.status === "approved") {
                 await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
                 setStage("success");
               } else {
                 setStage("failed");
               }
-            } catch {
+            } catch (e) {
+              console.error("[Deposit] Verify error:", e);
               setStage("failed");
             }
           } else {
@@ -157,11 +184,12 @@ export default function DepositPage() {
           }
         },
         onclose: () => {
-          // User dismissed modal without paying
+          console.log("[Deposit] Modal closed by user");
           setCurrentTxRef(null);
         },
       });
     } catch (err: unknown) {
+      console.error("[Deposit] Payment error:", err);
       toast({
         title: "Payment Error",
         description: err instanceof Error ? err.message : "Could not open payment. Please try again.",
