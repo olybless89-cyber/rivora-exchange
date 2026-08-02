@@ -32,11 +32,15 @@ async function initiatePayment(
   amount: number,
   token: string,
 ): Promise<{ paymentLink: string; txRef: string; depositRequestId: string }> {
-  const r = await fetch(`${API}/api/flutterwave/initiate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ amount, currency: "NGN", redirectUrl: `${window.location.origin}/payment-callback` }),
-  });
+  const r = await fetchWithTimeout(
+    `${API}/api/flutterwave/initiate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ amount, currency: "NGN", redirectUrl: `${window.location.origin}/payment-callback` }),
+    },
+    15_000,
+  );
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
     throw new Error(err.message || "Could not initiate payment");
@@ -45,9 +49,11 @@ async function initiatePayment(
 }
 
 async function verifyPayment(txRef: string, token: string): Promise<{ status: string }> {
-  const r = await fetch(`${API}/api/flutterwave/verify/${encodeURIComponent(txRef)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const r = await fetchWithTimeout(
+    `${API}/api/flutterwave/verify/${encodeURIComponent(txRef)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+    15_000,
+  );
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
     throw new Error(err.message || "Verification failed");
@@ -62,8 +68,22 @@ function loadPaymentScript(): Promise<void> {
     s.src = "https://checkout.flutterwave.com/v3.js";
     s.onload = () => resolve();
     s.onerror = () => reject(new Error("Failed to load payment processor"));
+    // 10-second timeout on script load
+    const timer = setTimeout(() => reject(new Error("Payment processor timed out. Please check your connection.")), 10_000);
+    s.onload = () => { clearTimeout(timer); resolve(); };
     document.head.appendChild(s);
   });
+}
+
+// Wrapper that enforces a 15-second timeout on any fetch call
+async function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, ms = 15_000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 type DepositStage = "form" | "processing" | "success" | "failed";
@@ -95,12 +115,12 @@ export default function DepositPage() {
 
     setIsLoading(true);
     try {
-      // Load the secure payment script silently
       await loadPaymentScript();
-
-      // Create deposit request + get tx_ref from backend
       const { txRef } = await initiatePayment(numAmount, token);
       setCurrentTxRef(txRef);
+
+      // Modal is handing off to Flutterwave — stop the button spinner now
+      setIsLoading(false);
 
       window.FlutterwaveCheckout({
         public_key: FLW_PUBLIC_KEY,
@@ -119,7 +139,6 @@ export default function DepositPage() {
           logo: `${window.location.origin}/rivora-logo.png`,
         },
         callback: async (response: { status: string; tx_ref: string }) => {
-          // Payment processor confirmed the payment — now verify on our backend
           if (response.status === "successful" || response.status === "completed") {
             setStage("processing");
             try {
@@ -138,16 +157,16 @@ export default function DepositPage() {
           }
         },
         onclose: () => {
-          // Modal closed without completing payment
-          setIsLoading(false);
+          // User dismissed modal without paying
           setCurrentTxRef(null);
         },
       });
     } catch (err: unknown) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Payment initiation failed",
+        title: "Payment Error",
+        description: err instanceof Error ? err.message : "Could not open payment. Please try again.",
         variant: "destructive",
+      });
       });
       setIsLoading(false);
     }
