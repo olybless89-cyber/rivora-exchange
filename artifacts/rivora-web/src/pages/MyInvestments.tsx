@@ -4,6 +4,61 @@ import { Card } from "@/components/ui/card";
 import { formatNaira } from "@/lib/utils";
 import { differenceInDays, format } from "date-fns";
 import { TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+
+// Returns seconds until next 00:01 UTC (when the daily cron fires)
+function useNextMiningCountdown() {
+  const getSecondsUntilNextMining = () => {
+    const now = new Date();
+    const next = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1, // tomorrow
+      0, 1, 0             // 00:01:00 UTC
+    ));
+    return Math.max(0, Math.floor((next.getTime() - now.getTime()) / 1000));
+  };
+
+  const [secs, setSecs] = useState(getSecondsUntilNextMining);
+
+  useEffect(() => {
+    const id = setInterval(() => setSecs(getSecondsUntilNextMining()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const h = Math.floor(secs / 3600).toString().padStart(2, "0");
+  const m = Math.floor((secs % 3600) / 60).toString().padStart(2, "0");
+  const s = (secs % 60).toString().padStart(2, "0");
+
+  // Next mining date label
+  const nextDate = new Date();
+  if (new Date().getUTCHours() > 0 || new Date().getUTCMinutes() >= 1) {
+    nextDate.setDate(nextDate.getDate() + 1);
+  }
+  const dateLabel = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, "0")}-${String(nextDate.getUTCDate()).padStart(2, "0")}`;
+
+  return { h, m, s, dateLabel };
+}
+
+function NextMiningBox() {
+  const { h, m, s, dateLabel } = useNextMiningCountdown();
+  return (
+    <div style={{
+      background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)",
+      borderRadius: 10, padding: "10px 14px", textAlign: "center", minWidth: 120,
+    }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b", margin: 0, letterSpacing: 1 }}>
+        {dateLabel}
+      </p>
+      <p style={{ fontSize: 20, fontWeight: 800, color: "#f59e0b", margin: "2px 0", fontVariantNumeric: "tabular-nums", letterSpacing: 2 }}>
+        {h}:{m}:{s}
+      </p>
+      <p style={{ fontSize: 10, color: "#9C9C9C", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        Next Mining
+      </p>
+    </div>
+  );
+}
 
 export default function MyInvestmentsPage() {
   const { data: user } = useGetMe();
@@ -18,6 +73,11 @@ export default function MyInvestmentsPage() {
   const totalDailyIncome = active.reduce((sum, inv) => {
     return sum + (Number(inv.amount) * Number(inv.dailyRate)) / 100;
   }, 0);
+  const totalIncome = active.reduce((sum, inv) => {
+    const daily = (Number(inv.amount) * Number(inv.dailyRate)) / 100;
+    const days = differenceInDays(new Date(inv.endDate), new Date(inv.startDate));
+    return sum + daily * days;
+  }, 0);
 
   return (
     <AppLayout>
@@ -27,18 +87,21 @@ export default function MyInvestmentsPage() {
 
         {active.length > 0 && (
           <div style={{
-            background: "linear-gradient(135deg, #141414, #050505)", border: "1px solid rgba(212,175,55,0.25)",
-            borderRadius: 16, padding: 20, marginBottom: 24, boxShadow: "0 0 40px rgba(212,175,55,0.06)",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
+            display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24,
           }}>
-            <div>
-              <p style={{ color: "#9C9C9C", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>Total Daily Income</p>
-              <p style={{ fontSize: 26, fontWeight: 700, color: "#D4AF37", margin: "6px 0 0" }}>{formatNaira(totalDailyIncome)}</p>
-              <p style={{ color: "#9C9C9C", fontSize: 12, margin: "4px 0 0" }}>Across {active.length} active plan{active.length > 1 ? "s" : ""}</p>
-            </div>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <TrendingUp size={22} color="#D4AF37" />
-            </div>
+            {[
+              { label: "Active Plans", value: active.length.toString() },
+              { label: "Daily Income", value: formatNaira(totalDailyIncome) },
+              { label: "Total Income", value: formatNaira(totalIncome) },
+            ].map(({ label, value }) => (
+              <div key={label} style={{
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 12, padding: "14px 10px", textAlign: "center",
+              }}>
+                <p style={{ fontSize: 16, fontWeight: 800, color: "#D4AF37", margin: 0 }}>{value}</p>
+                <p style={{ fontSize: 10, color: "#9C9C9C", margin: "4px 0 0" }}>{label}</p>
+              </div>
+            ))}
           </div>
         )}
 
@@ -51,7 +114,7 @@ export default function MyInvestmentsPage() {
               {active.map((inv) => {
                 const dailyIncome = (Number(inv.amount) * Number(inv.dailyRate)) / 100;
                 const daysTotal = differenceInDays(new Date(inv.endDate), new Date(inv.startDate));
-                const totalIncome = dailyIncome * daysTotal;
+                const invTotalIncome = dailyIncome * daysTotal;
                 const daysRemaining = Math.max(0, differenceInDays(new Date(inv.endDate), new Date()));
                 const progress = Math.min(100, ((daysTotal - daysRemaining) / daysTotal) * 100);
                 const nearEnd = daysRemaining <= 7;
@@ -64,10 +127,14 @@ export default function MyInvestmentsPage() {
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 600, color: "#22c55e", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "3px 10px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active</span>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
                       <StatBox label="Deposited" value={formatNaira(inv.amount)} />
-                      <StatBox label="Daily income" value={formatNaira(dailyIncome)} highlight />
-                      <StatBox label="Total return" value={formatNaira(totalIncome)} />
+                      <StatBox label="Total return" value={formatNaira(invTotalIncome)} />
+                    </div>
+                    {/* Daily income + Next Mining row */}
+                    <div style={{ display: "flex", gap: 10, alignItems: "stretch", marginBottom: 14 }}>
+                      <StatBox label="Daily income" value={formatNaira(dailyIncome)} highlight flex1 />
+                      <NextMiningBox />
                     </div>
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -124,9 +191,9 @@ export default function MyInvestmentsPage() {
   );
 }
 
-function StatBox({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function StatBox({ label, value, highlight, flex1 }: { label: string; value: string; highlight?: boolean; flex1?: boolean }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "10px 8px", textAlign: "center", border: highlight ? "1px solid rgba(212,175,55,0.2)" : "1px solid rgba(255,255,255,0.04)" }}>
+    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "10px 8px", textAlign: "center", border: highlight ? "1px solid rgba(212,175,55,0.2)" : "1px solid rgba(255,255,255,0.04)", flex: flex1 ? 1 : undefined }}>
       <p style={{ fontSize: 13, fontWeight: 700, color: highlight ? "#D4AF37" : "#fff", margin: 0 }}>{value}</p>
       <p style={{ fontSize: 10, color: "#9C9C9C", margin: "3px 0 0" }}>{label}</p>
     </div>
