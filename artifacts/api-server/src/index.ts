@@ -8,10 +8,8 @@ import { logger } from "./lib/logger.js";
 import app from "./app.js";
 
 const rawPort = process.env.PORT;
-if (!rawPort) {
-  throw new Error("PORT environment variable is required but was not provided.");
-}
-const port = Number(rawPort);
+// Render injects PORT automatically; fall back to 4000 in other environments
+const port = Number(rawPort ?? "4000");
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }

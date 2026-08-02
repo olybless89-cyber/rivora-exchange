@@ -6,8 +6,8 @@ services:
     region: oregon
     plan: free
     rootDir: .
-    buildCommand: npm install -g pnpm tsx && pnpm install --frozen-lockfile
-    startCommand: tsx artifacts/api-server/src/index.ts
+    buildCommand: corepack enable pnpm && pnpm install --frozen-lockfile
+    startCommand: node_modules/.bin/tsx artifacts/api-server/src/index.ts
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
