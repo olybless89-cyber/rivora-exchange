@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: free
     rootDir: .
-    buildCommand: corepack enable pnpm && pnpm install --frozen-lockfile
+    buildCommand: bash render-build.sh
     startCommand: node_modules/.bin/tsx artifacts/api-server/src/index.ts
     healthCheckPath: /health
     envVars:
