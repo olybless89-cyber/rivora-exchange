@@ -12,15 +12,21 @@ const API = import.meta.env.VITE_API_BASE_URL as string;
 type Status = "verifying" | "success" | "failed" | "cancelled";
 
 async function verifyPayment(txRef: string, token: string): Promise<{ status: string }> {
-  const r = await fetch(
-    `${API}/api/flutterwave/verify/${encodeURIComponent(txRef)}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  if (!r.ok) {
-    const err = await r.json();
-    throw new Error(err.message || "Verification failed");
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const r = await fetch(
+      `${API}/api/flutterwave/verify/${encodeURIComponent(txRef)}`,
+      { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal },
+    );
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || "Verification failed");
+    }
+    return r.json();
+  } finally {
+    clearTimeout(id);
   }
-  return r.json();
 }
 
 export default function PaymentCallbackPage() {

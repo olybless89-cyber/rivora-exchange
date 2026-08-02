@@ -167,7 +167,6 @@ export default function DepositPage() {
         description: err instanceof Error ? err.message : "Could not open payment. Please try again.",
         variant: "destructive",
       });
-      });
       setIsLoading(false);
     }
   };
