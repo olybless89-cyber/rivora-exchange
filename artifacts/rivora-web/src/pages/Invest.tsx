@@ -175,7 +175,7 @@ export default function InvestPage() {
                   gap: 32,
                 }}
               >
-                {plans.map((plan) => (
+                {plans.map((plan: any) => (
                   <div
                     key={plan.id}
                     style={{
@@ -225,7 +225,7 @@ export default function InvestPage() {
 
                 {/* Dots */}
                 <div style={{ display: "flex", gap: 8 }}>
-                  {plans.map((_, index) => (
+                  {plans.map((_: any, index: number) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}

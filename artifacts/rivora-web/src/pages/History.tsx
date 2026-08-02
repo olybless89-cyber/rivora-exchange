@@ -69,7 +69,7 @@ export default function HistoryPage() {
               No transactions found.
             </p>
           )}
-          {(transactions ?? []).map((tx, i, arr) => (
+          {(transactions ?? []).map((tx: any, i: number, arr: any[]) => (
             <div
               key={tx.id}
               style={{

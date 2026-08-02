@@ -67,13 +67,13 @@ export default function MyInvestmentsPage() {
     { query: { enabled: !!user } },
   );
 
-  const active = (investments ?? []).filter((inv) => inv.status === "active");
-  const completed = (investments ?? []).filter((inv) => inv.status === "completed");
+  const active = (investments ?? []).filter((inv: any) => inv.status === "active");
+  const completed = (investments ?? []).filter((inv: any) => inv.status === "completed");
 
-  const totalDailyIncome = active.reduce((sum, inv) => {
+  const totalDailyIncome = active.reduce((sum: any, inv: any) => {
     return sum + (Number(inv.amount) * Number(inv.dailyRate)) / 100;
   }, 0);
-  const totalIncome = active.reduce((sum, inv) => {
+  const totalIncome = active.reduce((sum: any, inv: any) => {
     const daily = (Number(inv.amount) * Number(inv.dailyRate)) / 100;
     const days = differenceInDays(new Date(inv.endDate), new Date(inv.startDate));
     return sum + daily * days;
@@ -111,7 +111,7 @@ export default function MyInvestmentsPage() {
           <>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-              {active.map((inv) => {
+              {active.map((inv: any) => {
                 const dailyIncome = (Number(inv.amount) * Number(inv.dailyRate)) / 100;
                 const daysTotal = differenceInDays(new Date(inv.endDate), new Date(inv.startDate));
                 const invTotalIncome = dailyIncome * daysTotal;
@@ -157,7 +157,7 @@ export default function MyInvestmentsPage() {
           <>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: "#9C9C9C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Completed</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {completed.map((inv) => {
+              {completed.map((inv: any) => {
                 const dailyIncome = (Number(inv.amount) * Number(inv.dailyRate)) / 100;
                 const daysTotal = differenceInDays(new Date(inv.endDate), new Date(inv.startDate));
                 return (

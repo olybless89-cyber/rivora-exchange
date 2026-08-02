@@ -32,7 +32,7 @@ export default function AdminWithdrawalsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const userName = (userId: string) => users?.find((u) => u.id === userId)?.fullName ?? userId;
+  const userName = (userId: string) => users?.find((u: any) => u.id === userId)?.fullName ?? userId;
 
   const review = (id: string, status: "approved" | "rejected") => {
     updateRequest.mutate(
@@ -69,7 +69,7 @@ export default function AdminWithdrawalsPage() {
       {isLoading && <p style={{ color: "#9C9C9C" }}>Loading requests…</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {(requests ?? []).map((r) => (
+        {(requests ?? []).map((r: any) => (
           <Card key={r.id} style={{ padding: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
               <div>

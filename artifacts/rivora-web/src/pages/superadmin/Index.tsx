@@ -16,7 +16,7 @@ export default function SuperAdminPage() {
   }, []);
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("tenants").update({ is_active: !current }).eq("id", id);
+    await (supabase as any).from("tenants").update({ is_active: !current }).eq("id", id);
     setTenants(ts => ts.map(t => t.id === id ? { ...t, is_active: !current } : t));
   };
 

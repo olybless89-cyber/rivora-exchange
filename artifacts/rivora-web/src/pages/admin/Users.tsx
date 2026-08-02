@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
       {isLoading && <p style={{ color: "#9C9C9C" }}>Loading users…</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {(users ?? []).map((u) => (
+        {(users ?? []).map((u: any) => (
           <Card key={u.id} style={{ padding: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
               <div style={{ flex: 1 }}>
@@ -88,8 +88,8 @@ function ViewUserDialog({ user, onOpenChange }: { user: any; onOpenChange: (open
   );
 
   // Calculate total earnings from investments
-  const totalInvested = investments?.reduce((sum, inv) => sum + Number(inv.amount), 0) ?? 0;
-  const totalDailyRate = investments?.reduce((sum, inv) => sum + (Number(inv.amount) * Number(inv.dailyRate) / 100), 0) ?? 0;
+  const totalInvested = investments?.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0) ?? 0;
+  const totalDailyRate = investments?.reduce((sum: number, inv: any) => sum + (Number(inv.amount) * Number(inv.dailyRate) / 100), 0) ?? 0;
 
   return (
     <Dialog
@@ -129,7 +129,7 @@ function ViewUserDialog({ user, onOpenChange }: { user: any; onOpenChange: (open
             <p style={{ color: "#9C9C9C", fontSize: 12 }}>Loading...</p>
           ) : investments && investments.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 300, overflowY: "auto" }}>
-              {investments.map((inv) => (
+              {investments.map((inv: any) => (
                 <Card key={inv.id} style={{ padding: 12, background: "rgba(0,0,0,0.2)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>

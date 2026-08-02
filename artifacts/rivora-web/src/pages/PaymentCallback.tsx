@@ -7,18 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
-const API = import.meta.env.VITE_API_BASE_URL as string;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 type Status = "verifying" | "success" | "failed" | "cancelled";
 
 async function verifyPayment(txRef: string, token: string): Promise<{ status: string }> {
-  const r = await fetch(
-    `${API}/api/flutterwave/verify/${encodeURIComponent(txRef)}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/flutterwave-verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ tx_ref: txRef }),
+  });
   if (!r.ok) {
-    const err = await r.json();
-    throw new Error(err.message || "Verification failed");
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error || "Verification failed");
   }
   return r.json();
 }

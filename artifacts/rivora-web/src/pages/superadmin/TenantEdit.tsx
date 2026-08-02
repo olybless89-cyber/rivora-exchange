@@ -10,7 +10,7 @@ const CURRENCIES = ["NGN", "USD", "GHS", "KES", "ZAR", "GBP", "EUR"];
 const TABS = ["Branding", "Financial", "Payment", "Plans"] as const;
 type Tab = typeof TABS[number];
 
-const emptyTenant: Partial<Tenant> = {
+const emptyTenant: Record<string, unknown> = {
   slug: "", name: "", domain: "",
   primary_color: "#D4AF37", secondary_color: "#0D2044",
   background_color: "#000000", text_color: "#FFFFFF",
@@ -32,7 +32,7 @@ export default function SuperAdminTenantEditPage() {
   const tenantId = isNew ? null : params?.id;
 
   const [tab, setTab] = useState<Tab>("Branding");
-  const [form, setForm] = useState<Partial<Tenant>>(emptyTenant);
+  const [form, setForm] = useState<Record<string, any>>(emptyTenant);
   const [plans, setPlans] = useState<InvestmentPlan[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!isNew);
@@ -49,7 +49,7 @@ export default function SuperAdminTenantEditPage() {
     });
   }, [tenantId]);
 
-  const set = (k: keyof Tenant, v: unknown) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
   const toggleArr = (key: keyof Tenant, val: string) => {
     const arr = (form[key] as string[]) ?? [];
@@ -61,12 +61,12 @@ export default function SuperAdminTenantEditPage() {
     setSaving(true);
     try {
       if (isNew) {
-        const { data, error } = await supabase.from("tenants").insert({ ...emptyTenant, ...form }).select().maybeSingle();
+        const { data, error } = await (supabase as any).from("tenants").insert({ ...emptyTenant, ...form }).select().maybeSingle();
         if (error) throw new Error(error.message);
         toast({ title: "Tenant created!" });
         setLocation(`/superadmin/tenants/${data!.id}`);
       } else {
-        const { error } = await supabase.from("tenants").update({ ...form, updated_at: new Date().toISOString() }).eq("id", tenantId!);
+        const { error } = await (supabase as any).from("tenants").update({ ...form, updated_at: new Date().toISOString() }).eq("id", tenantId!);
         if (error) throw new Error(error.message);
         toast({ title: "Saved!" });
       }
@@ -83,10 +83,10 @@ export default function SuperAdminTenantEditPage() {
   const savePlan = async (plan: InvestmentPlan) => {
     if (!plan.name) return;
     if (plan.id.startsWith("new-")) {
-      const { data, error } = await supabase.from("investment_plans").insert({ ...plan, id: undefined, tenant_id: tenantId! }).select().maybeSingle();
+      const { data, error } = await (supabase as any).from("investment_plans").insert({ ...plan, id: undefined, tenant_id: tenantId! }).select().maybeSingle();
       if (!error && data) setPlans(ps => ps.map(p => p.id === plan.id ? data : p));
     } else {
-      await supabase.from("investment_plans").update(plan).eq("id", plan.id);
+      await (supabase as any).from("investment_plans").update(plan).eq("id", plan.id);
     }
     toast({ title: "Plan saved" });
   };
@@ -199,8 +199,8 @@ export default function SuperAdminTenantEditPage() {
               Each site uses its own Flutterwave keys. Revenue goes directly to the site owner's Flutterwave account.
             </div>
             <Row label="Flutterwave Public Key"><Input value={form.flw_public_key ?? ""} onChange={e => set("flw_public_key", e.target.value)} placeholder="FLWPUBK_TEST-…" /></Row>
-            <Row label="Flutterwave Secret Key"><Input type="password" value={form.flw_secret_key ?? ""} onChange={e => set("flw_secret_key", e.target.value)} placeholder="FLWSECK_TEST-…" /></Row>
-            <Row label="Webhook Hash"><Input value={form.flw_webhook_hash ?? ""} onChange={e => set("flw_webhook_hash", e.target.value)} placeholder="Your custom webhook hash" /></Row>
+            <Row label="Flutterwave Secret Key"><Input type="password" value={(form as any).flw_secret_key ?? ""} onChange={e => set("flw_secret_key", e.target.value)} placeholder="FLWSECK_TEST-…" /></Row>
+            <Row label="Webhook Hash"><Input value={(form as any).flw_webhook_hash ?? ""} onChange={e => set("flw_webhook_hash", e.target.value)} placeholder="Your custom webhook hash" /></Row>
             <p style={{ fontSize: 12, color: "#9C9C9C" }}>
               Set webhook URL in Flutterwave Dashboard → Settings → Webhooks:<br />
               <code style={{ color: "#D4AF37" }}>https://[your-supabase-ref].supabase.co/functions/v1/flutterwave-webhook</code>

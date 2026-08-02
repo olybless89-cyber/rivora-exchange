@@ -27,7 +27,7 @@ export default function AdminTransactionsPage() {
   );
   const { data: users } = useListUsers();
 
-  const userName = (userId: string) => users?.find((u) => u.id === userId)?.fullName ?? userId;
+  const userName = (userId: string) => users?.find((u: any) => u.id === userId)?.fullName ?? userId;
 
   return (
     <AdminLayout title="All Transactions">
@@ -54,7 +54,7 @@ export default function AdminTransactionsPage() {
             No transactions found.
           </p>
         )}
-        {(transactions ?? []).map((tx, i, arr) => (
+        {(transactions ?? []).map((tx: any, i: number, arr: any[]) => (
           <div
             key={tx.id}
             style={{

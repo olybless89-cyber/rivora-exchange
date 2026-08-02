@@ -55,7 +55,7 @@ export default function AdminPlansPage() {
       {isLoading && <p style={{ color: "#9C9C9C" }}>Loading plans…</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {(plans ?? []).map((plan) => (
+        {(plans ?? []).map((plan: any) => (
           <Card key={plan.id} style={{ padding: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>

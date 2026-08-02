@@ -54,9 +54,9 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const { h, m, s } = useNextMiningCountdown();
 
-  const activeInvestments = (investments ?? []).filter((inv) => inv.status === "active");
+  const activeInvestments = (investments ?? []).filter((inv: any) => inv.status === "active");
   const totalDailyIncome = activeInvestments.reduce(
-    (sum, inv) => sum + (Number(inv.amount) * Number(inv.dailyRate)) / 100, 0
+    (sum: any, inv: any) => sum + (Number(inv.amount) * Number(inv.dailyRate)) / 100, 0
   );
 
   const recent = (transactions ?? []).slice(0, 5);
@@ -206,7 +206,7 @@ export default function DashboardPage() {
           {recent.length === 0 && (
             <p style={{ padding: 20, textAlign: "center", color: "#9C9C9C", fontSize: 13, margin: 0 }}>No transactions yet.</p>
           )}
-          {recent.map((tx, i) => (
+          {recent.map((tx: any, i: number) => (
             <div
               key={tx.id}
               style={{

@@ -10,10 +10,10 @@ export default function AdminDashboardPage() {
   const { data: deposits } = useListDepositRequests();
   const { data: withdrawals } = useListWithdrawalRequests();
 
-  const pendingDeposits = deposits?.filter(d => d.status === "pending") ?? [];
-  const pendingWithdrawals = withdrawals?.filter(w => w.status === "pending") ?? [];
+  const pendingDeposits = deposits?.filter((d: any) => d.status === "pending") ?? [];
+  const pendingWithdrawals = withdrawals?.filter((w: any) => w.status === "pending") ?? [];
 
-  const totalUserBalance = users?.reduce((sum, u) => sum + Number(u.balance), 0) ?? 0;
+  const totalUserBalance = users?.reduce((sum: number, u: any) => sum + Number(u.balance), 0) ?? 0;
 
   return (
     <AdminLayout title="Dashboard">

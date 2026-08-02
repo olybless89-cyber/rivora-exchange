@@ -43,10 +43,10 @@ export async function getMe(): Promise<User | null> {
   return data ?? null;
 }
 
-export async function updateProfile(updates: Partial<Pick<User, "full_name" | "bank_name" | "bank_account_number" | "bank_account_name">>) {
+export async function updateProfile(updates: Record<string, unknown>) {
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("Not authenticated");
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("users")
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", session.session.user.id);
