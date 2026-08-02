@@ -7,7 +7,7 @@ import { requireAuth, requireAdmin } from "../lib/auth-middleware.js";
 
 const router: IRouter = Router();
 
-router.get("/investment-plans", requireAuth, async (req, res): Promise<void> => {
+router.get("/investment-plans", async (req, res): Promise<void> => {
   const { activeOnly } = req.query as Record<string, string | undefined>;
 
   let query = db.select().from(investmentPlansTable).$dynamic();
