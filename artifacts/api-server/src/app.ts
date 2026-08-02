@@ -45,7 +45,8 @@ app.use("/api", router);
 // Global error handler -- exposes underlying DB/runtime errors in response
 // so failures are diagnosable from the client/logs instead of a bare 500.
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-  req.log?.error?.({ err }, "Unhandled error");
+  // req.log is injected by pino-http at runtime; cast to access it
+  (req as any).log?.error?.({ err }, "Unhandled error");
   res.status(500).json({ error: err?.message ?? "Internal Server Error" });
 });
 

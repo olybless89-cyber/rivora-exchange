@@ -96,7 +96,8 @@ router.patch("/users/:userId", requireAuth, requireAdmin, async (req, res): Prom
     return;
   }
 
-  req.log?.info?.({ userId }, "User updated");
+  // req.log is pino-http — available at runtime but not on the base Request type
+  (req as any).log?.info?.({ userId }, "User updated");
   res.json(toPublicUser(user));
 });
 

@@ -78,7 +78,7 @@ router.patch("/deposit-requests/:requestId", requireAuth, requireAdmin, async (r
 
   const wasAlreadyReviewed = existing.status !== "pending";
 
-  const updated = await db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
     const [request] = await tx
       .update(depositRequestsTable)
       .set({ status: parsed.data.status, reviewedAt: new Date() })

@@ -56,7 +56,7 @@ router.post("/investments", requireAuth, async (req, res): Promise<void> => {
   const now = new Date();
   const endDate = new Date(now.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
 
-  const investment = await db.transaction(async (tx) => {
+  const investment = await db.transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
     const [inv] = await tx
       .insert(userInvestmentsTable)
       .values({

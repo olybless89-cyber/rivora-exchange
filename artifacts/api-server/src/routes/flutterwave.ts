@@ -236,7 +236,7 @@ async function _creditDeposit(
   depositAmount: number,
   paymentMethod: string,
 ): Promise<void> {
-  await db.transaction(async (tx) => {
+  await db.transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
     // Lock and re-check status to prevent double-credit
     const [req] = await tx
       .select()

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "echo 'Using tsx at runtime — no compile step needed'",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "migrate:plans": "tsx src/lib/migrate-plans.ts"

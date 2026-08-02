@@ -92,7 +92,7 @@ router.patch("/withdrawal-requests/:requestId", requireAuth, requireAdmin, async
 
   const wasAlreadyReviewed = existing.status !== "pending";
 
-  const updated = await db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
     const [request] = await tx
       .update(withdrawalRequestsTable)
       .set({ status: parsed.data.status, reviewedAt: new Date() })
