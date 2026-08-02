@@ -69,6 +69,7 @@ router.post("/flutterwave/initiate", requireAuth, async (req: Request, res: Resp
       title: "Rivora Exchange",
       description: `Fund your Rivora account (${currency})`,
       logo: `${process.env.FRONTEND_URL ?? ""}/rivora-logo.png`,
+      beneficiary_name: "RIVORA EXCHANGE NIG LTD",
     },
     meta: {
       deposit_request_id: depositReq.id,

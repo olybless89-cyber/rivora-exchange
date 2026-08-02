@@ -158,9 +158,10 @@ export default function DepositPage() {
           name: user.fullName,
         },
         customizations: {
-          title: "Rivora Exchange",
+          title: "Rivora Exchange Nig Ltd",
           description: `Fund your Rivora wallet`,
           logo: `${window.location.origin}/rivora-logo.png`,
+          beneficiary_name: "RIVORA EXCHANGE NIG LTD",
         },
         callback: async (response: { status: string; tx_ref: string }) => {
           console.log("[Deposit] FLW callback status:", response.status);
