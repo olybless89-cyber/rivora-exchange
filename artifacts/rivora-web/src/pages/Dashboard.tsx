@@ -1,13 +1,31 @@
 import { Link } from "wouter";
-import { useGetMe, useListInvestmentPlans, useListTransactions, useListMyReferrals, getListTransactionsQueryKey } from "@workspace/api-client-react";
+import { useGetMe, useListInvestmentPlans, useListTransactions, useListMyReferrals, useListInvestments, getListTransactionsQueryKey } from "@workspace/api-client-react";
+import type { UserInvestment } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
 import { PlanCarousel } from "@/components/PlanCarousel";
 import { formatNaira, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon, Users, Copy, CheckCheck } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon, Users, Copy, CheckCheck, Landmark } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function useNextMiningCountdown() {
+  const getSecsUntilNextMining = () => {
+    const now = new Date();
+    const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1, 0));
+    return Math.max(0, Math.floor((next.getTime() - now.getTime()) / 1000));
+  };
+  const [secs, setSecs] = useState(getSecsUntilNextMining);
+  useEffect(() => {
+    const id = setInterval(() => setSecs(getSecsUntilNextMining()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const h = Math.floor(secs / 3600).toString().padStart(2, "0");
+  const m = Math.floor((secs % 3600) / 60).toString().padStart(2, "0");
+  const s = (secs % 60).toString().padStart(2, "0");
+  return { h, m, s };
+}
 
 const TYPE_LABEL: Record<string, string> = {
   deposit: "Deposit",
@@ -15,6 +33,7 @@ const TYPE_LABEL: Record<string, string> = {
   investment: "Investment",
   bonus: "Bonus",
   referral_bonus: "Referral Bonus",
+  investment_return: "Daily Return",
 };
 
 export default function DashboardPage() {
@@ -25,8 +44,18 @@ export default function DashboardPage() {
   const { data: transactions } = useListTransactions(transactionsParams, {
     query: { enabled: !!user, queryKey: getListTransactionsQueryKey(transactionsParams) },
   });
+  const { data: investments } = useListInvestments(
+    user ? { userId: user.id } : undefined,
+    { query: { enabled: !!user } },
+  );
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const { h, m, s } = useNextMiningCountdown();
+
+  const activeInvestments = (investments ?? []).filter((inv: UserInvestment) => inv.status === "active");
+  const totalDailyIncome = activeInvestments.reduce(
+    (sum: number, inv: UserInvestment) => sum + (Number(inv.amount) * Number(inv.dailyRate)) / 100, 0
+  );
 
   const recent = (transactions ?? []).slice(0, 5);
   const teamCount = referrals?.length ?? 0;
@@ -109,11 +138,50 @@ export default function DashboardPage() {
           <QuickAction href="/history" icon={HistoryIcon} label="History" />
         </div>
 
+        {/* Accepted Payment Method Notice */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.25)",
+          borderRadius: 12, padding: "12px 16px", marginBottom: 20,
+        }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(212,175,55,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Landmark size={18} color="#D4AF37" />
+          </div>
+          <div>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9C9C9C", margin: 0 }}>Accepted Payment Method</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#D4AF37", margin: "2px 0 0" }}>Bank Transfer Only</p>
+          </div>
+        </div>
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Investment Plans</h2>
           <Link href="/invest" style={{ color: "#D4AF37", fontSize: 12, textDecoration: "none" }}>View all</Link>
         </div>
         <PlanCarousel plans={plans ?? []} />
+
+        {/* Next Mining Countdown — always visible */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
+          borderRadius: 14, padding: "14px 18px", marginBottom: 24,
+        }}>
+          <div>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9C9C9C", margin: 0 }}>Next Mining</p>
+            <p className="tabular-nums" style={{ fontSize: 22, fontWeight: 800, color: "#f59e0b", margin: "4px 0 2px", letterSpacing: 2 }}>
+              {h}:{m}:{s}
+            </p>
+            {activeInvestments.length > 0 ? (
+              <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>
+                Daily income: <span style={{ color: "#D4AF37", fontWeight: 600 }}>{formatNaira(totalDailyIncome)}</span>
+              </p>
+            ) : (
+              <p style={{ fontSize: 11, color: "#9C9C9C", margin: 0 }}>Invest to start earning daily income</p>
+            )}
+          </div>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: 24 }}>⛏️</span>
+          </div>
+        </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Recent Transactions</h2>
@@ -123,7 +191,7 @@ export default function DashboardPage() {
           {recent.length === 0 && (
             <p style={{ padding: 20, textAlign: "center", color: "#9C9C9C", fontSize: 13, margin: 0 }}>No transactions yet.</p>
           )}
-          {recent.map((tx, i) => (
+          {recent.map((tx: any, i: number) => (
             <div
               key={tx.id}
               style={{
