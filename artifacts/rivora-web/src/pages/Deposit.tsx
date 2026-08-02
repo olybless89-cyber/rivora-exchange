@@ -14,8 +14,6 @@ import {
   AlertCircle,
   CreditCard,
   Landmark,
-  Smartphone,
-  Zap,
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE_URL as string;
@@ -124,7 +122,7 @@ export default function DepositPage() {
         tx_ref: txRef,
         amount: numAmount,
         currency,
-        payment_options: "card,banktransfer,ussd,mobilemoney",
+        payment_options: "banktransfer",
         customer: {
           email: `${user.phone.replace("+", "")}@rivora.app`,
           phone_number: user.phone,
@@ -326,31 +324,22 @@ export default function DepositPage() {
               letterSpacing: "0.06em",
             }}
           >
-            Accepted Payment Methods
+            Accepted Payment Method
           </p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {[
-              { icon: CreditCard, label: "Card" },
-              { icon: Landmark, label: "Bank Transfer" },
-              { icon: Smartphone, label: "Mobile Money" },
-              { icon: Zap, label: "USSD" },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 8,
-                  padding: "6px 12px",
-                }}
-              >
-                <Icon size={14} color="#D4AF37" />
-                <span style={{ fontSize: 12, color: "#e8eaec" }}>{label}</span>
-              </div>
-            ))}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(212,175,55,0.06)",
+              border: "1px solid rgba(212,175,55,0.3)",
+              borderRadius: 10,
+              padding: "10px 14px",
+              width: "fit-content",
+            }}
+          >
+            <Landmark size={16} color="#D4AF37" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#D4AF37" }}>Bank Transfer</span>
           </div>
         </Card>
 

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { PlanCarousel } from "@/components/PlanCarousel";
 import { formatNaira, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon, Users, Copy, CheckCheck } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, History as HistoryIcon, Users, Copy, CheckCheck, Landmark } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
 
@@ -96,6 +96,30 @@ export default function DashboardPage() {
             Earn 10% referral bonus when your team deposits!
           </p>
         </Card>
+
+        {/* Accepted Payment Method Notice */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "rgba(212,175,55,0.06)",
+          border: "1px solid rgba(212,175,55,0.25)",
+          borderRadius: 12, padding: "12px 16px", marginBottom: 20,
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "rgba(212,175,55,0.12)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <Landmark size={18} color="#D4AF37" />
+          </div>
+          <div>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9C9C9C", margin: 0 }}>
+              Accepted Payment Method
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#D4AF37", margin: "2px 0 0" }}>
+              Bank Transfer Only
+            </p>
+          </div>
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 28 }}>
           <QuickAction href="/deposit" icon={ArrowDownToLine} label="Deposit" />
